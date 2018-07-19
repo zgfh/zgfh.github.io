@@ -5,5 +5,5 @@ do
   echo "$command"
   $command -h >/dev/null 2>&1 &&install_command='apt-get'&& break
 done
-apt-get update && apt-get install -y supervisor bash curl
+${install_command} update && ${install_command} install -y vim
 echo "you can install tools use,have fun!\n: ${install_command} install -y vim"
