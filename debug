@@ -1,4 +1,4 @@
-# curl -sSL https://zgfh.github.io |bash
+# curl -sSL https://zgfh.github.io/debug |bash
 sed -i 's/deb.debian.org/mirrors.aliyun.com/g' /etc/apt/sources.list
 install_command='apk'
 for command in apt-get apt apk yum 
