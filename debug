@@ -1,0 +1,9 @@
+sed -i 's/deb.debian.org/mirrors.aliyun.com/g' /etc/apt/sources.list
+install_command='apk'
+for command in apt-get apt apk yum 
+do
+  echo "$command"
+  $command -h >/dev/null 2>&1 &&install_command='apt-get'&& break
+done
+apt-get update && apt-get install -y supervisor bash curl
+echo "you can install tools use,have fun!\n: ${install_command} install -y vim"
