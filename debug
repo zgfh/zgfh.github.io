@@ -3,7 +3,7 @@ install_command='apk'
 for command in apt-get apt apk yum 
 do
   echo "$command"
-  $command -h >/dev/null 2>&1 &&install_command='apt-get'&& break
+  $command -h >/dev/null 2>&1 &&install_command=$command&& break
 done
 ${install_command} update && ${install_command} install -y vim
 echo "you can install tools use,have fun!\n: ${install_command} install -y vim"
