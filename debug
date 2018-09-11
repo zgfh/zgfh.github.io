@@ -6,7 +6,7 @@ do
   echo "$command"
   $command -h >/dev/null 2>&1 &&install_command=$command&& break
 done
-if [[ "${install_command}" == "apt-get"]] ;then
+if [[ "${install_command}" == "apt-get" ]] ;then
   ps --version ||${install_command} install procps
 fi
 ${install_command} update && ${install_command} install -y vim
