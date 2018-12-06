@@ -26,3 +26,7 @@ EOF
 
 ss-local -c config.json &
 
+# test
+SS_URL=socks5://127.0.0.1:1080/
+export http_proxy=$SS_URL HTTPS_PROXY=$SS_URL ALL_PROXY=$SS_URL NO_PROXY=NO_PROXY=localhost,127.0.0.1,docker.io,yanzhe919.mirror.aliyuncs.com,99nkhzdo.mirror.aliyuncs.com,*.aliyuncs.com,*.mirror.aliyuncs.com,registry.docker-cn.com,hub.c.163.com,hub-auth.c.163.com
+curl google.com
