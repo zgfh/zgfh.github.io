@@ -7,8 +7,19 @@ sudo apt install shadowsocks-libev
 }
 #centos
 install_centos(){
-su -c 'yum -y update'
-su -c 'yum install -y shadowsocks-libev'
+cat >/etc/yum.repos.d/librehat-shadowsocks-epel-6.repo<<-EOF
+[librehat-shadowsocks]
+name=Copr repo for shadowsocks owned by librehat
+baseurl=https://copr-be.cloud.fedoraproject.org/results/librehat/shadowsocks/epel-6-$basearch/
+type=rpm-md
+skip_if_unavailable=True
+gpgcheck=1
+gpgkey=https://copr-be.cloud.fedoraproject.org/results/librehat/shadowsocks/pubkey.gpg
+repo_gpgcheck=0
+enabled=1
+enabled_metadata=1
+EOF
+yum install shadowsocks-libev
 }
 install_centos||install_ubuntu
 
