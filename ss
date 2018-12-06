@@ -7,8 +7,8 @@ sudo apt install shadowsocks-libev
 }
 #centos
 install_centos(){
-su -c 'yum update'
-su -c 'yum install shadowsocks-libev'
+su -c 'yum -y update'
+su -c 'yum install -y shadowsocks-libev'
 }
 install_centos||install_ubuntu
 
