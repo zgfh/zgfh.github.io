@@ -1,0 +1,1 @@
+docker run -d -p 80:80 -v /data:/var/www/html/data/public  --privileged  daocloud.io/daocloud/kodexplorer 
