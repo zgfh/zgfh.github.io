@@ -2,6 +2,7 @@ proxy:
    image: alpine
    restart: always
    net: host
+   # 代理说明: https://www.daozzg.com/2018/03/23/ssh-forward/
    command: sh -c 'apk add openssh; ssh -tt root@daovpn.top -R 2223:2222'
    ports:
      - 80:80
