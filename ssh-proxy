@@ -3,7 +3,7 @@ proxy:
    restart: always
    net: host
    # 代理说明: https://www.daozzg.com/2018/03/23/ssh-forward/
-   command: sh -c 'apk add openssh; ssh -tt root@daovpn.top -R 2223:2222'
+   command: sh -c 'apk add openssh; ssh -o TCPKeepAlive=yes -o StrictHostKeyChecking=no -tt root@8.8.8.8 -R 2223:2222 "while true ; do echo ok ;sleep 10; done"'
    ports:
      - 80:80
    volumes:
