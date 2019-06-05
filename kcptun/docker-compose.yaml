@@ -1,0 +1,13 @@
+# 客户端，这里是代理UDP:104.199.186.111:59401 到本地到59401端口
+kcptun-client:
+   image: xtaci/kcptun 
+   restart: always
+   net: host
+   command: client -r "104.199.186.111:59401" -l ":59401" -key "xasdfsdafsdfsadfasdf" -mode fast2 -nocomp -crypt aes-128  -dscp 46
+
+## 服务器，这里是代理127.0.0.1:59001到UDP59401端口
+kcptun-server:
+   image: xtaci/kcptun 
+   restart: always
+   net: host
+   command: server -t "127.0.0.1:59001" -l ":59401" -key "xasdfsdafsdfsadfasdf" -mode fast2 -nocomp -crypt aes-128 -dscp 46
