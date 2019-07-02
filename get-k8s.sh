@@ -22,9 +22,9 @@ sed -i '/ swap / s/^/#/' /etc/fstab
 
 
 # 安装docker 和kubelet
-docker version >/dev/null 2>&1 || curl -fsSL https://get.docker.com -o get-docker.sh && sh get-docker.sh && systemctl start docker && systemctl enable docker
-kubelet --version >/dev/null 2>&1 ||docker run --rm -v /tmp:/tmp daocloud.io/daocloud/kube_binary:v1.15.0 sh -c 'cp -rf /app /tmp/k8s'
-kubelet --version >/dev/null 2>&1 ||cd /tmp/k8s/;./install.sh
+docker version >/dev/null 2>&1 || (curl -fsSL https://get.docker.com -o get-docker.sh && sh get-docker.sh && systemctl start docker && systemctl enable docker)
+kubelet --version >/dev/null 2>&1 ||(docker run --rm -v /tmp:/tmp daocloud.io/daocloud/kube_binary:v1.15.0 sh -c 'cp -rf /app /tmp/k8s')
+kubelet --version >/dev/null 2>&1 ||(cd /tmp/k8s/;./install.sh)
 yum install -y socat
 
 master_install(){
@@ -38,10 +38,14 @@ sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
 sudo chown $(id -u):$(id -g) $HOME/.kube/config
 
 # 安装calico 网络
+
 }
 slave_install(){
 kubeadm join $1:6443 --token=vqheb6.vqheb6tdangerous --discovery-token-unsafe-skip-ca-verification
 echo "you need run (master print this): kubeadm join <masterip> --token xxx "
+}
+
+# 重置
 }
 reset_install(){
 kubeadm reset -f
@@ -50,7 +54,7 @@ kubeadm reset -f
 if [ "$1" == "join" ];then
 slave_install $2
 elif [ "$1" == "reset" ];then
-
+reset_install
 else
 master_install
 fi
