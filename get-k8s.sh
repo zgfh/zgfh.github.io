@@ -4,7 +4,7 @@ set -e
 # 只试用于centos 7+
 
 # 主节点: curl -fsSL https://zgfh.github.io/get-k8s.sh -o get-k8s.sh && bash get-k8s.sh 
-# 从节点: curl -fsSL https://zgfh.github.io/get-k8s.sh -o get-k8s.sh && bash get-k8s.sh join <MATER_IP> --token <TOKEN> --discovery-token-ca-cert-hash <ca-cert-hash>      
+# 从节点: curl -fsSL https://zgfh.github.io/get-k8s.sh -o get-k8s.sh && bash get-k8s.sh join <master_ip>     
 
 
 
@@ -29,7 +29,7 @@ yum install -y socat
 
 master_install(){
 # 安装k8s
-kubeadm --image-repository=daocloud.io/daocloud --kubernetes-version=v1.15.0 init 
+kubeadm --image-repository=daocloud.io/daocloud --kubernetes-version=v1.15.0 init --token=dangerous.vqheb6ta77l4dywf
 
 
 # 配置kubelet
@@ -40,10 +40,11 @@ sudo chown $(id -u):$(id -g) $HOME/.kube/config
 # 安装calico 网络
 }
 slave_install(){
+kubeadm join $1:6443 --token 5n66gn.vqheb6ta77l4dywf --discovery-token-unsafe-skip-ca-verification
 echo "you need run (master print this): kubeadm join <masterip> --token xxx "
 }
 if [ "$1" == "join" ];then
-slave_install $@
+slave_install $2
 else
 master_install
 fi
