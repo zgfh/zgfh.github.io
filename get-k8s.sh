@@ -29,7 +29,7 @@ yum install -y socat
 
 master_install(){
 # 安装k8s
-kubeadm --image-repository=daocloud.io/daocloud --kubernetes-version=v1.15.0 init --token=dangerous.vqheb6ta77l4dywf
+kubeadm --image-repository=daocloud.io/daocloud --kubernetes-version=v1.15.0 init --token=vqheb6.vqheb6tdangerous
 
 
 # 配置kubelet
@@ -40,7 +40,7 @@ sudo chown $(id -u):$(id -g) $HOME/.kube/config
 # 安装calico 网络
 }
 slave_install(){
-kubeadm join $1:6443 --token 5n66gn.vqheb6ta77l4dywf --discovery-token-unsafe-skip-ca-verification
+kubeadm join $1:6443 --token=vqheb6.vqheb6tdangerous --discovery-token-unsafe-skip-ca-verification
 echo "you need run (master print this): kubeadm join <masterip> --token xxx "
 }
 reset_install(){
