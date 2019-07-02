@@ -46,7 +46,6 @@ echo "you need run (master print this): kubeadm join <masterip> --token xxx "
 }
 
 # 重置
-}
 reset_install(){
 kubeadm reset -f
 
