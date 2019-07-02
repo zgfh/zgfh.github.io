@@ -19,9 +19,9 @@ sed -i '/ swap / s/^/#/' /etc/fstab
 
 
 # 安装docker 和kubelet
-docker version || curl -fsSL https://get.docker.com -o get-docker.sh && sh get-docker.sh
-kubelet --version ||docker run --rm -v /tmp:/tmp daocloud.io/daocloud/kube_binary:v1.15.0 sh -c 'cp -rf /app /tmp/k8s'
-kubelet --version ||cd /tmp/k8s/;./install.sh
+docker version >/dev/null 2>&1 || curl -fsSL https://get.docker.com -o get-docker.sh && sh get-docker.sh
+kubelet --version >/dev/null 2>&1 ||docker run --rm -v /tmp:/tmp daocloud.io/daocloud/kube_binary:v1.15.0 sh -c 'cp -rf /app /tmp/k8s'
+kubelet --version >/dev/null 2>&1 ||cd /tmp/k8s/;./install.sh
 
 master_install(){
 # 安装k8s
