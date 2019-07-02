@@ -18,10 +18,12 @@ swapoff -a
 sed -i '/ swap / s/^/#/' /etc/fstab
 
 
+
 # 安装docker 和kubelet
-docker version >/dev/null 2>&1 || curl -fsSL https://get.docker.com -o get-docker.sh && sh get-docker.sh
+docker version >/dev/null 2>&1 || curl -fsSL https://get.docker.com -o get-docker.sh && sh get-docker.sh && systemctl start docker && systemctl enable docker
 kubelet --version >/dev/null 2>&1 ||docker run --rm -v /tmp:/tmp daocloud.io/daocloud/kube_binary:v1.15.0 sh -c 'cp -rf /app /tmp/k8s'
 kubelet --version >/dev/null 2>&1 ||cd /tmp/k8s/;./install.sh
+yum install -y socat
 
 master_install(){
 # 安装k8s
