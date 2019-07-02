@@ -40,7 +40,7 @@ sudo chown $(id -u):$(id -g) $HOME/.kube/config
 # 安装calico 网络
 }
 slave_install(){
-kubeadm $@
+echo "you need run (master print this): kubeadm join <masterip> --token xxx "
 }
 if [ "$1" == "join" ];then
 slave_install $@
