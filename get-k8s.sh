@@ -19,7 +19,9 @@ echo "vm.swappiness = 0" >> /etc/sysctl.conf
 swapoff -a
 sed -i '/ swap / s/^/#/' /etc/fstab
 
-
+#DEVICE=$(ls -l /sys/class/net | awk '$NF~/pci0/ { print $(NF-2); exit }')
+#IPADDR=$(ip -br address show dev $DEVICE | awk '{print substr($3,1,index($3,"/")-1);}')
+#ping -c `hostname` || echo '$IPADDR `hostname`' >>/etc/hosts
 
 # 安装docker 和kubelet
 docker version >/dev/null 2>&1 || (curl -fsSL https://get.docker.com -o get-docker.sh && sh get-docker.sh && systemctl start docker && systemctl enable docker)
