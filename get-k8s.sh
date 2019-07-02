@@ -2,9 +2,8 @@
 set -e
 # 快速安装一个k8s，仅限测试使用
 # 只试用于centos 7+
-# 主节点: sh get-k8s.sh
-kubeadm join 192.168.101.55:6443 
-# 从节点(参数是主节点输出的): sh get-k8s.sh join 
+# 主节点: curl -fsSL https://raw.githubusercontent.com/zgfh/zgfh.github.io/master/get-k8s.sh -o get-k8s.sh && bash get-k8s.sh 
+# 从节点: curl -fsSL https://raw.githubusercontent.com/zgfh/zgfh.github.io/master/get-k8s.sh -o get-k8s.sh && bash get-k8s.sh join <MATER_IP> --token <TOKEN> --discovery-token-ca-cert-hash <ca-cert-hash>      
 
 
 # 系统配置
