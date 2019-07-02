@@ -2,8 +2,10 @@
 set -e
 # 快速安装一个k8s，仅限测试使用
 # 只试用于centos 7+
-# 主节点: curl -fsSL https://raw.githubusercontent.com/zgfh/zgfh.github.io/master/get-k8s.sh -o get-k8s.sh && bash get-k8s.sh 
-# 从节点: curl -fsSL https://raw.githubusercontent.com/zgfh/zgfh.github.io/master/get-k8s.sh -o get-k8s.sh && bash get-k8s.sh join <MATER_IP> --token <TOKEN> --discovery-token-ca-cert-hash <ca-cert-hash>      
+
+# 主节点: curl -fsSL https://zgfh.github.io/get-k8s.sh -o get-k8s.sh && bash get-k8s.sh 
+# 从节点: curl -fsSL https://zgfh.github.io/get-k8s.sh -o get-k8s.sh && bash get-k8s.sh join <MATER_IP> --token <TOKEN> --discovery-token-ca-cert-hash <ca-cert-hash>      
+
 
 
 # 系统配置
