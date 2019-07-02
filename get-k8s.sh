@@ -43,8 +43,14 @@ slave_install(){
 kubeadm join $1:6443 --token 5n66gn.vqheb6ta77l4dywf --discovery-token-unsafe-skip-ca-verification
 echo "you need run (master print this): kubeadm join <masterip> --token xxx "
 }
+reset_install(){
+kubeadm reset -f
+
+}
 if [ "$1" == "join" ];then
 slave_install $2
+elif [ "$1" == "reset" ];then
+
 else
 master_install
 fi
