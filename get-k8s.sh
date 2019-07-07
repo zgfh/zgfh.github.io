@@ -19,6 +19,13 @@ echo "vm.swappiness = 0" >> /etc/sysctl.conf
 swapoff -a
 sed -i '/ swap / s/^/#/' /etc/fstab
 
+cat >/etc/sysctl.d/k8s.conf <<EOF
+net.bridge.bridge-nf-call-ip6tables = 1
+net.bridge.bridge-nf-call-iptables = 1
+net.ipv4.ip_forward=1
+EOF
+
+
 #DEVICE=$(ls -l /sys/class/net | awk '$NF~/pci0/ { print $(NF-2); exit }')
 #IPADDR=$(ip -br address show dev $DEVICE | awk '{print substr($3,1,index($3,"/")-1);}')
 #ping -c `hostname` || echo '$IPADDR `hostname`' >>/etc/hosts
@@ -27,7 +34,7 @@ sed -i '/ swap / s/^/#/' /etc/fstab
 docker version >/dev/null 2>&1 || (curl -fsSL https://get.docker.com -o get-docker.sh && sh get-docker.sh && systemctl start docker && systemctl enable docker)
 kubelet --version >/dev/null 2>&1 ||(docker run --rm -v /tmp:/tmp daocloud.io/daocloud/kube_binary:v1.15.0 sh -c 'cp -rf /app /tmp/k8s')
 kubelet --version >/dev/null 2>&1 ||(cd /tmp/k8s/;./install.sh)
-yum install -y socat
+yum install -y socat ebtables ethtool
 
 master_install(){
 # 安装k8s
