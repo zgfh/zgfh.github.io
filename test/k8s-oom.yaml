@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: oom-demo  
+  labels:  
+    app: spring-boot-demo 
+spec:
+  replicas: 1  # 副本数量
+  selector:    # 选择器，如何查找要管理的 pod,请确保没有别的controller使用相同的label
+    matchLabels:
+      app: oom-demo-spring-boot-demo
+  template: # 同 pod (内部结构见：https://github.com/zgfh/k8s-demo/blob/master/pod/pod.yaml),但 RestartPolicy 必须为Always(默认)
+    metadata:
+      labels: 
+        app: oom-demo-spring-boot-demo
+    spec:
+      containers:
+      - name: spring-boot-demo 
+        image: springio/gs-spring-boot-docker
+        ports:  
+        - containerPort: 8080
+        resources:
+        env:
+        - name: JAVA_OPTS
+          value: -Xms128m -Xmx256m -XX:+PrintCommandLineFlags -XX:+PrintFlagsFinal 
+        resources:
+            limits:
+                cpu: "1000m"
+                memory: 100Mi
+            requests:
+                cpu: "1000m"
+                memory: "100Mi"
