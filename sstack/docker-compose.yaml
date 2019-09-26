@@ -1,0 +1,10 @@
+# 常用服务的配置,方便启动各种中间件服务（仅限测试使用，没有做持久化，高可用等）
+elasticsearch:
+  image: elasticsearch:7.3.2
+  ports: 
+   - 9200:9200 
+   - 9300:9300
+   
+  environment:
+    - discovery.type=single-node
+    - JAVA_OPTS=-Xms256m -Xmx512m
