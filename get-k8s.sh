@@ -5,7 +5,7 @@ set -e
 
 # 主节点: curl -fsSL https://zgfh.github.io/get-k8s.sh -o get-k8s.sh && bash get-k8s.sh 
 # 从节点: curl -fsSL https://zgfh.github.io/get-k8s.sh -o get-k8s.sh && bash get-k8s.sh join <master_ip>     
-
+# 网络: kubectl apply -f https://zgfh.github.io//calico-v3.10.yaml
 
 
 # 系统配置
@@ -38,7 +38,7 @@ yum install -y socat ebtables ethtool
 
 master_install(){
 # 安装k8s
-kubeadm --image-repository=daocloud.io/daocloud --kubernetes-version=v1.15.0 init --token=vqheb6.vqheb6tdangerous
+kubeadm --image-repository=daocloud.io/daocloud --kubernetes-version=v1.15.0 init --pod-network-cidr=10.252.0.0/16 --token=vqheb6.vqheb6tdangerous
 
 
 # 配置kubelet
