@@ -1,5 +1,6 @@
 proxy:
-   build: .
+   #build: .
+   image: daocloud.io/zheng--guang/ssh
    restart: always
    net: host # 如果是mac，这里会不工作,请改用ports参数暴露代理的端口, https://forums.docker.com/t/should-docker-run-net-host-work/14215/29
 #   ports: #仅当net:host 不工作时需要配置
