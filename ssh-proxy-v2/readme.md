@@ -3,7 +3,6 @@
 ### 下载
 ```
 mkdir ssh-proxy && cd ssh-proxy
-wget https://raw.githubusercontent.com/zgfh/zgfh.github.io/master/ssh-proxy-v2/Dockerfile
 wget https://raw.githubusercontent.com/zgfh/zgfh.github.io/master/ssh-proxy-v2/docker-compose.yml
 ```
 
