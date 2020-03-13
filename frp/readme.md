@@ -2,7 +2,7 @@ frp 代理
 详细使用参考：https://github.com/fatedier/frp
 
 ### 服务器端
-需要公网ip,开防火墙80,58700,58701,定义一个域名（可以二级，三级，四级），例如 *.frp.zgfh.io,解析到服务器的公网ip
+需要公网ip,开防火墙80,58700/tcp,58701/udp,定义一个域名（可以二级，三级，四级），例如 *.frp.zgfh.io,解析到服务器的公网ip
 复制 frps 到服务器,修改frp/frps.ini里面的密码，运行`docker-compose up -d `
 
 ### 客户端
