@@ -1,0 +1,5 @@
+frpc:
+  image: daocloud.io/zheng--guang/frpc
+  net: host
+  volumes:
+    - ./frp:/etc/frp
