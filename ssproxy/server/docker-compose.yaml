@@ -1,0 +1,7 @@
+ss-server:
+  image: shadowsocks/shadowsocks-libev
+  net: host
+  restart: always
+  command: ss-server -c /etc/ss/config.json
+  volumes:
+  - ./ss:/etc/ss
