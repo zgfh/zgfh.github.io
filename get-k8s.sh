@@ -7,6 +7,7 @@ set -e
 # 从节点: curl -fsSL https://zgfh.github.io/get-k8s.sh -o get-k8s.sh && bash get-k8s.sh join <master_ip>     
 # 网络: kubectl apply -f https://zgfh.github.io//calico-v3.10.yaml
 
+K8S_VERSION=${K8S_VERSION-"v1.19.2"}
 
 # 系统配置
 setenforce 0 && sed -i '/^SELINUX=/c\SELINUX=disabled' /etc/selinux/config
@@ -59,7 +60,7 @@ reset_install(){
 kubeadm reset -f
 
 }
-K8S_VERSION=${K8S_VERSION-"v1.19.2"}
+
 if [ "$1" == "join" ];then
 slave_install $2
 elif [ "$1" == "reset" ];then
