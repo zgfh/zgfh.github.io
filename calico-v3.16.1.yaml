@@ -16,7 +16,7 @@ data:
   # - Otherwise, if VXLAN or BPF mode is enabled, set to your network MTU - 50
   # - Otherwise, if IPIP is enabled, set to your network MTU - 20
   # - Otherwise, if not using any encapsulation, set to your network MTU.
-  veth_mtu: "1440"
+  veth_mtu: "1360" # docs: https://docs.projectcalico.org/networking/mtu
 
   # The CNI network configuration to install on each node. The special
   # values in this config will be automatically populated.
@@ -3652,7 +3652,10 @@ spec:
               value: "k8s,bgp"
             # Auto-detect the BGP IP address.
             - name: IP
-              value: "autodetect"
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: status.hostIP
             # Enable IPIP
             - name: CALICO_IPV4POOL_IPIP
               value: "Always"
