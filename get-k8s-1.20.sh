@@ -9,7 +9,7 @@ set -e
 
 # 如果只想初始化环境，手动通过kubeadm 安装 curl -fsSL https://zgfh.github.io/get-k8s.sh -o get-k8s.sh && bash get-k8s.sh init
 
-K8S_VERSION=${K8S_VERSION-"v1.19.2"}
+K8S_VERSION=${K8S_VERSION-"v1.20.4"}
 
 init_host(){
 # 系统配置
@@ -51,7 +51,7 @@ sudo sysctl --system
 # 安装containerd 和kubelet
 docker version >/dev/null 2>&1 || containerd_install
 kubelet --version >/dev/null 2>&1 ||rm -rf /tmp/k8s
-kubelet --version >/dev/null 2>&1 ||(docker run --rm -v /tmp:/tmp daocloud.io/daocloud/kube_binary:${K8S_VERSION} sh -c 'cp -rf /app /tmp/k8s')
+kubelet --version >/dev/null 2>&1 ||(ctr run --mount type=bind,src=/tmp,dst=/tmp,options=rbind:rw --rm  daocloud.io/daocloud/kube_binary:${K8S_VERSION} k8s  sh -c "cp -rf /app /tmp/k8s")
 kubelet --version >/dev/null 2>&1 ||(cd /tmp/k8s/;./install.sh)
 yum install -y socat ebtables ethtool conntrack-tools
 }
