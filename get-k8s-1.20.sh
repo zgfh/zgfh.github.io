@@ -49,7 +49,7 @@ sudo sysctl --system
 #ping -c `hostname` || echo '$IPADDR `hostname`' >>/etc/hosts
 
 # 安装containerd 和kubelet
-docker version >/dev/null 2>&1 || containerd_install
+containerd -v >/dev/null 2>&1 || containerd_install
 kubelet --version >/dev/null 2>&1 ||rm -rf /tmp/k8s
 kubelet --version >/dev/null 2>&1 ||(ctr run --mount type=bind,src=/tmp,dst=/tmp,options=rbind:rw --rm  daocloud.io/daocloud/kube_binary:${K8S_VERSION} k8s  sh -c "cp -rf /app /tmp/k8s")
 kubelet --version >/dev/null 2>&1 ||(cd /tmp/k8s/;./install.sh)
@@ -64,6 +64,8 @@ yum update -y && yum install -y containerd.io
 
 mkdir -p /etc/containerd
 containerd config default | tee /etc/containerd/config.toml
+
+sed -i 's@sandbox_image@sandbox_image = "daocloud.io/daocloud/pause:3.2" #@g' /etc/containerd/config.toml
 
 systemctl restart containerd
 }
