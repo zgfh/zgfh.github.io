@@ -24,11 +24,15 @@ echo "vm.swappiness = 0" >> /etc/sysctl.conf
 swapoff -a
 sed -i '/ swap / s/^/#/' /etc/fstab
 
-# br_netfilter
+# overlay & br_netfilter
 lsmod | grep br_netfilter || modprobe br_netfilter
 cat <<EOF | tee /etc/modules-load.d/k8s.conf
+overlay
 br_netfilter
 EOF
+
+modprobe overlay
+modprobe br_netfilter
 
 cat >/etc/sysctl.d/k8s.conf <<EOF
 net.bridge.bridge-nf-call-ip6tables = 1
@@ -44,12 +48,24 @@ sudo sysctl --system
 #IPADDR=$(ip -br address show dev $DEVICE | awk '{print substr($3,1,index($3,"/")-1);}')
 #ping -c `hostname` || echo '$IPADDR `hostname`' >>/etc/hosts
 
-# 安装docker 和kubelet
-docker version >/dev/null 2>&1 || (curl -fsSL https://get.docker.com -o get-docker.sh && sh get-docker.sh && systemctl start docker && systemctl enable docker)
+# 安装containerd 和kubelet
+docker version >/dev/null 2>&1 || containerd_install
 kubelet --version >/dev/null 2>&1 ||rm -rf /tmp/k8s
 kubelet --version >/dev/null 2>&1 ||(docker run --rm -v /tmp:/tmp daocloud.io/daocloud/kube_binary:${K8S_VERSION} sh -c 'cp -rf /app /tmp/k8s')
 kubelet --version >/dev/null 2>&1 ||(cd /tmp/k8s/;./install.sh)
 yum install -y socat ebtables ethtool conntrack-tools
+}
+containerd_install(){
+yum install -y yum-utils device-mapper-persistent-data lvm2
+yum-config-manager \
+    --add-repo \
+    https://download.docker.com/linux/centos/docker-ce.repo
+yum update -y && yum install -y containerd.io
+
+mkdir -p /etc/containerd
+containerd config default | tee /etc/containerd/config.toml
+
+systemctl restart containerd
 }
 
 
