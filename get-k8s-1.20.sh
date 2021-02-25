@@ -55,12 +55,12 @@ kubelet --version >/dev/null 2>&1 ||(ctr run --mount type=bind,src=/tmp,dst=/tmp
 kubelet --version >/dev/null 2>&1 ||(cd /tmp/k8s/;./install.sh)
 yum install -y socat ebtables ethtool conntrack-tools
 }
-containerd_install(){
+containerd_install_from_docker(){
 yum install -y yum-utils device-mapper-persistent-data lvm2
 yum-config-manager \
     --add-repo \
     https://download.docker.com/linux/centos/docker-ce.repo
-yum update -y && yum install -y containerd.io
+yum install -y containerd.io
 
 mkdir -p /etc/containerd
 containerd config default | tee /etc/containerd/config.toml
