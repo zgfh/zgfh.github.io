@@ -55,7 +55,7 @@ kubelet --version >/dev/null 2>&1 ||(ctr run --mount type=bind,src=/tmp,dst=/tmp
 kubelet --version >/dev/null 2>&1 ||(cd /tmp/k8s/;./install.sh)
 yum install -y socat ebtables ethtool conntrack-tools
 }
-containerd_install_from_docker(){
+containerd_install(){
 yum install -y yum-utils device-mapper-persistent-data lvm2
 yum-config-manager \
     --add-repo \
