@@ -3,8 +3,8 @@ set -e
 # 快速安装一个k8s，仅限测试使用
 # 只试用于centos 7+
 
-# 主节点: curl -fsSL https://zgfh.github.io/get-k8s.sh -o get-k8s.sh && bash get-k8s.sh 
-# 从节点: curl -fsSL https://zgfh.github.io/get-k8s.sh -o get-k8s.sh && bash get-k8s.sh join <master_ip>     
+# 主节点: curl -fsSL https://zgfh.github.io/get-k8s-1.20.sh -o get-k8s.sh && bash get-k8s.sh 
+# 从节点: curl -fsSL https://zgfh.github.io/get-k8s-1.20.sh -o get-k8s.sh && bash get-k8s.sh join <master_ip>     
 # 网络: kubectl apply -f https://zgfh.github.io//calico-v3.10.yaml
 
 # 如果只想初始化环境，手动通过kubeadm 安装 curl -fsSL https://zgfh.github.io/get-k8s.sh -o get-k8s.sh && bash get-k8s.sh init
@@ -51,7 +51,7 @@ sudo sysctl --system
 # 安装containerd 和kubelet
 containerd -v >/dev/null 2>&1 || containerd_install
 kubelet --version >/dev/null 2>&1 ||rm -rf /tmp/k8s
-kubelet --version >/dev/null 2>&1 ||(ctr run --mount type=bind,src=/tmp,dst=/tmp,options=rbind:rw --rm  daocloud.io/daocloud/kube_binary:${K8S_VERSION} k8s  sh -c "cp -rf /app /tmp/k8s")
+kubelet --version >/dev/null 2>&1 ||(ctr image pull daocloud.io/daocloud/kube_binary:v1.20.4 && ctr run --mount type=bind,src=/tmp,dst=/tmp,options=rbind:rw --rm  daocloud.io/daocloud/kube_binary:${K8S_VERSION} k8s  sh -c "cp -rf /app /tmp/k8s")
 kubelet --version >/dev/null 2>&1 ||(cd /tmp/k8s/;./install.sh)
 yum install -y socat ebtables ethtool conntrack-tools
 }
