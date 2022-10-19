@@ -4517,7 +4517,10 @@ spec:
               value: "k8s,bgp"
             # Auto-detect the BGP IP address.
             - name: IP
-              value: "autodetect"
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: status.hostIP
             # Enable IPIP
             - name: CALICO_IPV4POOL_IPIP
               value: "Always"
