@@ -3,13 +3,13 @@ set -e
 # 快速安装一个k8s，仅限测试使用
 # 只试用于centos 7+
 
-# 主节点: curl -fsSL https://zgfh.github.io/get-k8s.sh -o get-k8s.sh && bash get-k8s.sh 
-# 从节点: curl -fsSL https://zgfh.github.io/get-k8s.sh -o get-k8s.sh && bash get-k8s.sh join <master_ip>     
+# 主节点: curl -fsSL https://zgfh.github.io/get-k8s-1.20.sh -o get-k8s.sh && bash get-k8s.sh 
+# 从节点: curl -fsSL https://zgfh.github.io/get-k8s-1.20.sh -o get-k8s.sh && bash get-k8s.sh join <master_ip>     
 # 网络: kubectl apply -f https://zgfh.github.io//calico-v3.10.yaml
 
 # 如果只想初始化环境，手动通过kubeadm 安装 curl -fsSL https://zgfh.github.io/get-k8s.sh -o get-k8s.sh && bash get-k8s.sh init
 
-K8S_VERSION=${K8S_VERSION-"v1.19.2"}
+K8S_VERSION=${K8S_VERSION-"v1.25.3"}
 
 init_host(){
 # 系统配置
@@ -17,11 +17,22 @@ setenforce 0 && sed -i '/^SELINUX=/c\SELINUX=disabled' /etc/selinux/config
 systemctl stop firewalld || echo "no firewalld"
 systemctl disable firewalld || echo "no firewalld"
 
+# swap
 sysctl vm.swappiness=0
 sed -i 's/vm.swappiness/#vm.swappiness/g' /etc/sysctl.conf
 echo "vm.swappiness = 0" >> /etc/sysctl.conf
 swapoff -a
 sed -i '/ swap / s/^/#/' /etc/fstab
+
+# overlay & br_netfilter
+lsmod | grep br_netfilter || modprobe br_netfilter
+cat <<EOF | tee /etc/modules-load.d/k8s.conf
+overlay
+br_netfilter
+EOF
+
+modprobe overlay
+modprobe br_netfilter
 
 cat >/etc/sysctl.d/k8s.conf <<EOF
 net.bridge.bridge-nf-call-ip6tables = 1
@@ -29,17 +40,59 @@ net.bridge.bridge-nf-call-iptables = 1
 net.ipv4.ip_forward=1
 EOF
 
+sudo sysctl --system
+
+
 
 #DEVICE=$(ls -l /sys/class/net | awk '$NF~/pci0/ { print $(NF-2); exit }')
 #IPADDR=$(ip -br address show dev $DEVICE | awk '{print substr($3,1,index($3,"/")-1);}')
 #ping -c `hostname` || echo '$IPADDR `hostname`' >>/etc/hosts
 
-# 安装docker 和kubelet
-docker version >/dev/null 2>&1 || (curl -fsSL https://get.docker.com -o get-docker.sh && sh get-docker.sh && systemctl start docker && systemctl enable docker)
+# 安装containerd 和kubelet
+containerd -v >/dev/null 2>&1 || containerd_install
 kubelet --version >/dev/null 2>&1 ||rm -rf /tmp/k8s
-kubelet --version >/dev/null 2>&1 ||(docker run --rm -v /tmp:/tmp daocloud.io/daocloud/kube_binary:${K8S_VERSION} sh -c 'cp -rf /app /tmp/k8s')
+kubelet --version >/dev/null 2>&1 ||(ctr image pull daocloud.io/daocloud/kube_binary:${K8S_VERSION} && ctr run --mount type=bind,src=/tmp,dst=/tmp,options=rbind:rw --rm  daocloud.io/daocloud/kube_binary:${K8S_VERSION} k8s  sh -c "cp -rf /app /tmp/k8s")
 kubelet --version >/dev/null 2>&1 ||(cd /tmp/k8s/;./install.sh)
 yum install -y socat ebtables ethtool conntrack-tools
+}
+
+k8s_binary_install(){
+
+# kubelet,kubeadm,kubectl
+#RELEASE="$(curl -sSL https://files.m.daocloud.io/dl.k8s.io/release/stable.txt)"
+RELEASE=${K8S_RELEASE}
+ARCH="amd64"
+DOWNLOAD_DIR=/usr/local/bin
+cd $DOWNLOAD_DIR
+sudo curl -L --remote-name-all https://dl.k8s.io/release/${RELEASE}/bin/linux/${ARCH}/{kubeadm,kubelet,kubectl}
+sudo chmod +x {kubeadm,kubelet,kubectl}
+
+RELEASE_VERSION="v0.4.0"
+curl -sSL "https://raw.githubusercontent.com/kubernetes/release/${RELEASE_VERSION}/cmd/kubepkg/templates/latest/deb/kubelet/lib/systemd/system/kubelet.service" | sed "s:/usr/bin:${DOWNLOAD_DIR}:g" | sudo tee /etc/systemd/system/kubelet.service
+sudo mkdir -p /etc/systemd/system/kubelet.service.d
+curl -sSL "https://raw.githubusercontent.com/kubernetes/release/${RELEASE_VERSION}/cmd/kubepkg/templates/latest/deb/kubeadm/10-kubeadm.conf" | sed "s:/usr/bin:${DOWNLOAD_DIR}:g" | sudo tee /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+
+systemctl enable --now kubelet
+
+
+CRICTL_VERSION="v1.25.0"
+ARCH="amd64"
+curl -L --remote-name-all "https://files.m.daocloud.io/github.com/kubernetes-sigs/cri-tools/releases/download/${CRICTL_VERSION}/crictl-${CRICTL_VERSION}-linux-${ARCH}.tar.gz" 
+tar -zvxf crictl-${CRICTL_VERSION}-linux-${ARCH}.tar.gz -C $DOWNLOAD_DIR
+# https://github.com/DaoCloud/public-image-mirror
+
+}
+
+containerd_install(){
+# cri https://github.com/DaoCloud/public-binary-files-mirror
+export NERDCTL_VERSION="0.22.2"
+mkdir -p nerdctl ;cd nerdctl
+wget https://files.m.daocloud.io/github.com/containerd/nerdctl/releases/download/v${NERDCTL_VERSION}/nerdctl-full-${NERDCTL_VERSION}-linux-amd64.tar.gz
+tar -zvxf nerdctl-full-${NERDCTL_VERSION}-linux-amd64.tar.gz
+mkdir -p /opt/cni/bin ;cp -f libexec/cni/* /opt/cni/bin/ ;cp bin/* /usr/local/bin/ ;cp lib/systemd/system/*.service /usr/lib/systemd/system/
+systemctl enable containerd ;systemctl start containerd --now
+systemctl enable buildkit;systemctl start buildkit --now
+
 }
 
 
