@@ -5,7 +5,7 @@ set -e
 
 # 主节点: curl -fsSL https://zgfh.github.io/get-k8s.sh -o get-k8s.sh && bash get-k8s.sh 
 # 从节点: curl -fsSL https://zgfh.github.io/get-k8s.sh -o get-k8s.sh && bash get-k8s.sh join <master_ip>     
-# 网络: kubectl apply -f https://zgfh.github.io//calico-v3.16.1.yaml
+# 网络: kubectl apply -f kubectl apply -f https://zgfh.github.io/calico-v3.24.2.yaml
 
 # 如果只想初始化环境，手动通过kubeadm 安装 curl -fsSL https://zgfh.github.io/get-k8s.sh -o get-k8s.sh && bash get-k8s.sh init
 
