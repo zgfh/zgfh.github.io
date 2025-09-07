@@ -1,9 +1,0 @@
-frps:
-  image: daocloud.io/zheng--guang/frps
-  #  net: host
-  volumes:
-    - ./frp:/etc/frp
-  ports:
-    - 58700:58700
-    - 58701:58701/udp
-    - 80:80

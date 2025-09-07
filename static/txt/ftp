@@ -1,8 +1,0 @@
-#docker run -d -p 80:80 -v /data:/var/www/html/data/public --name ftp  --privileged  daocloud.io/daocloud/kodexplorer 
-ftp:
-   image: daocloud.io/daocloud/kodexplorer
-   restart: always
-   ports: 
-   - 8080:80
-   volumes:
-     -  ./data:/var/www/html/data/public
