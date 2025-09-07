@@ -1,6 +1,6 @@
 baseURL: https://example.org/
 languageCode: en-us
-title: My New Hugo Site
+title: 争光的技术栈
 module:
   imports:
     - path: github.com/imfing/hextra
