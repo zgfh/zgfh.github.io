@@ -7,7 +7,7 @@ module:
 run: |
   hugo \
     --gc --minify \
-    --baseURL "https://zgfh.github.io/"
+    --baseURL "https://www.daozzg.com/"
 
 markup:
   # allow raw html
@@ -21,21 +21,24 @@ markup:
 
 menu:
   main:
-    - name: Docs
-      pageRef: /docs
+    - name: 首页
+      pageRef: /
       weight: 1
-    - name: About
-      pageRef: /about
+    - name: 文档
+      pageRef: /docs
       weight: 2
-    - name: Contact ↗
-      url: "https://github.com/zgfh"
+    - name: 关于我
+      pageRef: /about
       weight: 3
+    # - name: Contact ↗
+    #   url: "https://github.com/zgfh"
+    #   weight: 4
     - name: Search
-      weight: 4
+      weight: 5
       params:
         type: search
     - name: GitHub
-      weight: 5
+      weight: 6
       url: "https://github.com/zgfh/zzg-blog"
       params:
         icon: github
