@@ -57,3 +57,5 @@ hugo server --buildDrafts --disableFastRender
 ```
 hugo new content/docs/xx/xxx.md
 ```
+
+markdown 格式: https://imfing.github.io/hextra/zh-cn/docs/guide/markdown/

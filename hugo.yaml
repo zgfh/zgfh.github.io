@@ -1,10 +1,18 @@
 baseURL: https://example.org/
-languageCode: en-us
+languageCode: zh-cn
 title: 争光的技术栈
 module:
   imports:
     - path: github.com/imfing/hextra
 
+defaultContentLanguage: zh-cn
+languages:
+  zh-cn:
+    languageName: 中文
+    weight: 1
+  # en:
+  #   languageName: English
+  #   weight: 2
 markup:
   # allow raw html
   goldmark:
@@ -42,11 +50,26 @@ menu:
 params:
   navbar:
     displayTitle: true
-    displayLogo: false
-
+    displayLogo: true
+    logo:
+      path: images/zzg.jpg
+      dark: images/zzg.jpg
+      link: /
+      width: 40
+      height: 20
   footer:
-    displayCopyright: false
-    displayPoweredBy: true
+    displayCopyright: true
+    displayPoweredBy: false
+  banner:
+    key: 'announcement-xxx'
+    message: |
+      🎉 欢迎访问本站,如有问题欢迎 [留言](https://github.com/zgfh/zgfh.github.io/issues/1) 
+
+
+  enableGitInfo: true
+  # 显示最后更新时间
+  displayUpdatedDate: true
+  dateFormat: "January 2, 2006"
 
   editURL:
     enable: true
