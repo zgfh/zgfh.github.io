@@ -42,7 +42,7 @@ vi .gitignore
 vi hugo.yaml
 git init
 git add .
-git remote add origin git@github.com:zgfh/zzg-blog.git
+git remote add origin git@github.com:zgfh/zgfh.github.io.git
 git push -u origin main
 ```
 

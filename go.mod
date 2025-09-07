@@ -1,4 +1,4 @@
-module github.com/zgfh/zzg-blog
+module github.com/zgfh/zgfh.github.io
 
 go 1.23.5
 

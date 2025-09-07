@@ -1,4 +1,4 @@
-baseURL: https://example.org/
+baseURL: https://www.daozzg.com/
 languageCode: zh-cn
 title: 争光的技术栈
 module:
@@ -43,7 +43,7 @@ menu:
         type: search
     - name: GitHub
       weight: 6
-      url: "https://github.com/zgfh/zzg-blog"
+      url: "https://github.com/zgfh/zgfh.github.io"
       params:
         icon: github
 
@@ -65,7 +65,7 @@ params:
     message: |
       🎉 欢迎访问本站,如有问题欢迎 [留言](https://github.com/zgfh/zgfh.github.io/issues/1) 
   comments:
-    enable: true
+    enable: false
     type: giscus
 
     giscus:
@@ -81,4 +81,4 @@ params:
 
   editURL:
     enable: true
-    base: "https://github.com/zgfh/zzg-blog/edit/main/content"
+    base: "https://github.com/zgfh/zgfh.github.io/edit/main/content"
