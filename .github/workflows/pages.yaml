@@ -57,7 +57,7 @@ jobs:
         run: |
           hugo \
             --gc --minify \
-            --baseURL "https://www.daozzg.com/"
+            --baseURL "${{ steps.pages.outputs.base_url }}/"
       - name: 上传产物
         uses: actions/upload-pages-artifact@v3
         with:
@@ -67,7 +67,7 @@ jobs:
   deploy:
     environment:
       name: github-pages
-      url: https://www.daozzg.com
+      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     needs: build
     steps:
