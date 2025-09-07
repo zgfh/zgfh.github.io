@@ -64,7 +64,15 @@ params:
     key: 'announcement-xxx'
     message: |
       🎉 欢迎访问本站,如有问题欢迎 [留言](https://github.com/zgfh/zgfh.github.io/issues/1) 
+  comments:
+    enable: true
+    type: giscus
 
+    giscus:
+      repo: zgfh/zgfh.github.io
+      repoId: R_kgDOPrKhgA
+      category: General
+      categoryId: DIC_kwDOPrKhgM4CvGBr
 
   enableGitInfo: true
   # 显示最后更新时间
