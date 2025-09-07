@@ -1,0 +1,10 @@
+baseURL: https://example.org/
+languageCode: en-us
+title: My New Hugo Site
+module:
+  imports:
+    - path: github.com/imfing/hextra
+run: |
+  hugo \
+    --gc --minify \
+    --baseURL "https://zgfh.github.io/"
