@@ -1,0 +1,9 @@
+version: "3.8"
+services:
+  ss-client:
+    image: shadowsocks/shadowsocks-libev
+    network_mode: host
+    restart: always
+    command: ss-local -c /etc/ss/config.json
+    volumes:
+    - ./ss:/etc/ss

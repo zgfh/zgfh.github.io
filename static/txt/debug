@@ -1,0 +1,13 @@
+# curl -sSL https://zgfh.github.io/debug |bash
+sed -i 's/deb.debian.org/mirrors.aliyun.com/g' /etc/apt/sources.list
+install_command='apk'
+for command in apt-get apt apk yum 
+do
+  echo "$command"
+  $command -h >/dev/null 2>&1 &&install_command=$command&& break
+done
+if [[ "${install_command}" == "apt-get" ]] ;then
+  ps --version ||${install_command} install procps
+fi
+${install_command} update && ${install_command} install -y vim
+echo  "you can install tools use : ${install_command} install -y vim"

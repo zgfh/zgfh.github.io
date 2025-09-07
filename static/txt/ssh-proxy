@@ -1,0 +1,10 @@
+proxy:
+   image: alpine
+   restart: always
+   net: host
+   # 代理说明: https://www.daozzg.com/2018/03/23/ssh-forward/
+   command: sh -c 'apk add openssh; ssh -o TCPKeepAlive=yes -o StrictHostKeyChecking=no -tt root@8.8.8.8 -R 2223:2222 "while true ; do echo ok ;sleep 10; done"'
+   ports:
+     - 80:80
+   volumes: # 这里是挂载ssh key，你要确保在ssh登录的机器已经配置了key登录
+     -  /root/.ssh:/root/.ssh
