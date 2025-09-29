@@ -1,5 +1,5 @@
 # 构建阶段：使用 Hugo 构建静态文件
-FROM ghcr.io/gohugoio/hugo:v0.150.1 AS builder
+FROM m.daocloud.io/ghcr.io/gohugoio/hugo:v0.150.1 AS builder
 
 ENV GOPROXY https://goproxy.io,direct
 ENV HUGO_MODULE_PROXY https://goproxy.io,direct
@@ -9,7 +9,7 @@ COPY . .
 RUN hugo --minify
 
 # 运行阶段：使用 Nginx 提供静态服务
-FROM docker.io/library/nginx:alpine
+FROM m.daocloud.io/docker.io/library/nginx:alpine
 
 # 拷贝构建好的静态文件到 nginx 的 html 目录
 COPY --from=builder /src/public /usr/share/nginx/html
