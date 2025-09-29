@@ -1,8 +1,6 @@
 # 构建阶段：使用 Hugo 构建静态文件
 FROM ghcr.io/gohugoio/hugo:v0.150.1 AS builder
 
-ENV GOPROXY https://goproxy.io,direct
-ENV HUGO_MODULE_PROXY https://goproxy.io,direct
 USER root
 WORKDIR /src
 COPY . .

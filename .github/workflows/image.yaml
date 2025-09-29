@@ -1,5 +1,11 @@
 # GitHub Actions workflow: Build and Push Docker Image to Aliyun Registry
+
 name: Build and Push Docker Image
+
+# 显式声明权限，便于推送到 GitHub Container Registry
+permissions:
+  contents: read
+  packages: write
 
 on:
   push:
@@ -28,6 +34,13 @@ jobs:
           username: ${{ secrets.ALIYUN_USERNAME }}
           password: ${{ secrets.ALIYUN_PASSWORD }}
 
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+
       - name: Build and Push Docker image
         uses: docker/build-push-action@v5
         with:
@@ -37,4 +50,6 @@ jobs:
           tags: |
             registry.cn-shanghai.aliyuncs.com/daozzg-prod/zzg_blog:latest
             registry.cn-shanghai.aliyuncs.com/daozzg-prod/zzg_blog:${{ env.SHORT_SHA }}
-          # 支持 :latest 及短 commit id 两种 tag
+            ghcr.io/${{ github.repository_owner }}/zzg_blog:latest
+            ghcr.io/${{ github.repository_owner }}/zzg_blog:${{ env.SHORT_SHA }}
+          # 支持阿里云与GitHub仓库，latest及短commit id两种tag
