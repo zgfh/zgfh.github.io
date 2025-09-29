@@ -1,3 +1,7 @@
+---
+title: "coredns_v1.12.4_release_note"
+date: 2025-09-29T05:22:25+08:00
+---
 来源: https://github.com/coredns/coredns/releases/tag/v1.12.4
 
 # coredns/coredns v1.12.4 Release Notes

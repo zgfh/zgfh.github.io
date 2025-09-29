@@ -1,3 +1,7 @@
+---
+title: "chcf_project_changgelog_20250929_054905"
+date: 2025-09-29T05:50:33+08:00
+---
 # Release Note Changelog (20250929_054905)
 
 本次共新增 2 个 release note 文件：

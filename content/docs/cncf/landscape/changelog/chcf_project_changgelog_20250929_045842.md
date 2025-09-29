@@ -1,3 +1,7 @@
+---
+title: "chcf_project_changgelog_20250929_045842"
+date: 2025-09-29T05:22:25+08:00
+---
 # CNCF 项目变更记录
 
 ## Akri
