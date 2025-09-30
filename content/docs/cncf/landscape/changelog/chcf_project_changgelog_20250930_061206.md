@@ -1,3 +1,7 @@
+---
+title: "chcf_project_changgelog_20250930_061206"
+date: 2025-09-30T06:12:09+08:00
+---
 # CNCF 项目变更记录
 
 ## Kserve

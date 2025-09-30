@@ -1,3 +1,7 @@
+---
+title: "kubernetes_v1.32.9_release_note"
+date: 2025-09-29T05:22:25+08:00
+---
 来源: https://github.com/kubernetes/kubernetes/releases/tag/v1.32.9
 
 # kubernetes/kubernetes v1.32.9 Release Notes
