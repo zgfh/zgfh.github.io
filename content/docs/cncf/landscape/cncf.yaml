@@ -1312,9 +1312,9 @@ cncf:
     docs: https://kaito-project.netlify.app/
     description: Kubernetes AI Toolchain Operator (KAITO) simplifies LLM inference,
       tuning, and RAG workloads on Kubernetes.
-  - name: Kserve
+  - name: KServe
     stage: incubating
     github: https://github.com/kserve/kserve
-    docs: https://kserve.github.io/website/0.11/
-    description: Highly scalable and standards based Model Inference Platform on Kubernetes
-      for Trusted AI
+    docs: https://kserve.github.io/website/
+    description: Standardized Distributed Generative and Predictive AI Inference Platform
+      for Scalable, Multi-Framework Deployment on Kubernetes
