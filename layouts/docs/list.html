@@ -16,7 +16,9 @@
           
           {{ range .Pages }}
             <li>
-              <a href="{{ .Permalink }}">{{ .Date.Format "2006-01-02" }} | {{ .Title }}</a>
+              <a style="color: var(--hx-color-primary-600);" href="{{ .Permalink }}">
+                {{ .Date.Format "2006-01-02" }} | {{ .Title }}
+              </a>
             </li>
           {{ end }} 
 

@@ -8,7 +8,6 @@ title: '个人介绍'
 这是我的技术学习总结,希望对你有所帮助
 
 本博客的RSS地址: https://www.daozzg.com/docs/index.xml
-也可以只关注某个目录,如cncf目录: https://www.daozzg.com/docs/cncf/index.xml
 
 
 ## 免责声明
