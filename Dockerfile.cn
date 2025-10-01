@@ -1,5 +1,6 @@
 # 构建阶段：使用 Hugo 构建静态文件
-FROM m.daocloud.io/ghcr.io/gohugoio/hugo:v0.150.1 AS builder
+#FROM m.daocloud.io/ghcr.io/gohugoio/hugo:v0.150.1 AS builder
+FROM registry.cn-shanghai.aliyuncs.com/daozzg-prod/zzg_blog:fff6cf8 AS builder
 
 ENV GOPROXY https://goproxy.io,direct
 ENV HUGO_MODULE_PROXY https://goproxy.io,direct
