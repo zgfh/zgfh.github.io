@@ -662,10 +662,7 @@ cncf:
     stage: incubating
     github: https://github.com/kubeflow/kubeflow
     docs: https://kubeflow.org
-    description: The Kubeflow project is dedicated to making deployments of machine
-      learning workflows on Kubernetes simple, portable and scalable by providing
-      a straightforward way to deploy best-of-breed open-source systems for ML to
-      diverse infrastructures.
+    description: Kubeflow is the foundation of tools for AI Platforms on Kubernetes.
   - name: KubeFleet
     stage: sandbox
     github: https://github.com/kubefleet-dev/kubefleet
