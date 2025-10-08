@@ -12,6 +12,12 @@ cncf:
     github: https://github.com/runatlantis/atlantis
     docs: https://www.runatlantis.io/
     description: Terraform Pull Request Automation for Teams
+  - name: Cadence Workflow
+    stage: sandbox
+    github: https://github.com/cadence-workflow/cadence
+    docs: https://cadenceworkflow.io/
+    description: Cadence is a distributed, scalable, durable, and highly available
+      fault-oblivious stateful code platform.
   - name: CDK for Kubernetes (CDK8s)
     stage: sandbox
     github: https://github.com/cdk8s-team/cdk8s
