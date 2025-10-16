@@ -466,7 +466,7 @@ cncf:
     description: A multi-sandbox container runtime that provides cloud-native, all-scenario
       multiple sandbox container solutions.
   - name: Lima
-    stage: sandbox
+    stage: incubating
     github: https://github.com/lima-vm/lima
     docs: https://github.com/lima-vm/lima
     description: Linux virtual machines, typically on macOS, for running containerd
