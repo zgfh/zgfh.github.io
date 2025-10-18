@@ -23,5 +23,6 @@ tags: 'Air780EP其他资料'
 ### 硬件手册
 见 https://docs.openluat.com/air780ep/product/file/Air780EP%E7%A1%AC%E4%BB%B6%E6%89%8B%E5%86%8CV1.1.pdf
 
-这里存档[air780EP入门指南.md](../Air780EP硬件手册V1.1.pdf)
-这里存档[air780EP入门指南.md](../合宙Air780EP模组使用手册-V1.0.7.pdf)
+这里存档[Air780EP硬件手册V1.1.pdf](../Air780EP硬件手册V1.1.pdf)
+
+这里存档[合宙Air780EP模组使用手册-V1.0.7.pdf](../合宙Air780EP模组使用手册-V1.0.7.pdf)
