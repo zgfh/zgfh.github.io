@@ -10,18 +10,91 @@
           {{ .Content }}
 
         </div>
-         <ul>
+
           <!-- 遍历 content/posts/*.md -->
-          本目录文章列表:
-          
-          {{ range .Pages }}
+          <h2 style="margin-bottom: 1rem;">📚 本目录文章列表: </h2>
+          <ul style="list-style: none; padding: 0; margin: 0;">
+          {{ range .RegularPages }}
             <li>
               <a style="color: var(--hx-color-primary-600);" href="{{ .Permalink }}">
                 {{ .Date.Format "2006-01-02" }} | {{ .Title }}
               </a>
             </li>
           {{ end }} 
+          </ul>
 
+        <!-- 文章目录树 -->
+        <div style="margin-top: 2rem;">
+          <h2 style="margin-bottom: 1rem;">📚 本目录下子目录列表</h2>
+          
+          {{ $currentSection := . }}
+          
+          <!-- 显示直接子section -->
+          {{ range .Sections }}
+            {{ $pageCount := len .RegularPagesRecursive }}
+            
+            <div style="margin-bottom: 1rem; border: 1px solid #e5e7eb; border-radius: 8px; padding: 0.5rem;">
+              <div style="cursor: pointer; display: flex; align-items: center; padding: 0.5rem; background-color: #f9fafb; border-radius: 6px; transition: background-color 0.2s;" onclick="toggleFolder(this)">
+                <span style="margin-right: 0.5rem; transition: transform 0.2s; display: inline-block;">▶</span>
+                <span style="font-weight: 600; color: #374151;">📁 {{ .Title }}</span>
+                <span style="margin-left: auto; font-size: 0.875rem; color: #6b7280;">({{ $pageCount }} 篇文章)</span>
+              </div>
+              <div style="display: none; padding: 0.5rem 0 0 2rem;">
+                <ul style="list-style: none; padding: 0; margin: 0;">
+                  {{ range .RegularPagesRecursive }}
+                    <li style="padding: 0.25rem 0;">
+                      <a style="color: var(--hx-color-primary-600); text-decoration: none; display: flex; align-items: center;" href="{{ .Permalink }}">
+                        <span style="margin-right: 0.5rem;">📄</span>
+                        <span style="color: #9ca3af; font-size: 0.875rem; margin-right: 0.5rem;">{{ .Date.Format "2006-01-02" }}</span>
+                        <span>{{ .Title }}</span>
+                      </a>
+                    </li>
+                  {{ end }}
+                </ul>
+              </div>
+            </div>
+          {{ end }}
+
+          <!-- 显示当前目录下的直接文章（不在子目录中的） -->
+          {{ $directPages := where .RegularPages "Parent" . }}
+          {{ if gt (len $directPages) 0 }}
+            <div style="margin-bottom: 1rem; border: 1px solid #e5e7eb; border-radius: 8px; padding: 0.5rem;">
+              <div style="cursor: pointer; display: flex; align-items: center; padding: 0.5rem; background-color: #f9fafb; border-radius: 6px; transition: background-color 0.2s;" onclick="toggleFolder(this)">
+                <span style="margin-right: 0.5rem; transition: transform 0.2s; display: inline-block;">▶</span>
+                <span style="font-weight: 600; color: #374151;">📁 当前目录</span>
+                <span style="margin-left: auto; font-size: 0.875rem; color: #6b7280;">({{ len $directPages }} 篇文章)</span>
+              </div>
+              <div style="display: none; padding: 0.5rem 0 0 2rem;">
+                <ul style="list-style: none; padding: 0; margin: 0;">
+                  {{ range $directPages }}
+                    <li style="padding: 0.25rem 0;">
+                      <a style="color: var(--hx-color-primary-600); text-decoration: none; display: flex; align-items: center;" href="{{ .Permalink }}">
+                        <span style="margin-right: 0.5rem;">📄</span>
+                        <span style="color: #9ca3af; font-size: 0.875rem; margin-right: 0.5rem;">{{ .Date.Format "2006-01-02" }}</span>
+                        <span>{{ .Title }}</span>
+                      </a>
+                    </li>
+                  {{ end }}
+                </ul>
+              </div>
+            </div>
+          {{ end }}
+        </div>
+
+        <script>
+          function toggleFolder(element) {
+            const content = element.nextElementSibling;
+            const icon = element.querySelector('span:first-child');
+            
+            if (content.style.display === 'none' || content.style.display === '') {
+              content.style.display = 'block';
+              icon.style.transform = 'rotate(90deg)';
+            } else {
+              content.style.display = 'none';
+              icon.style.transform = 'rotate(0deg)';
+            }
+          }
+        </script>
 
         <div class="hx:mt-16"></div>
         {{ partial "components/last-updated.html" . }}
