@@ -672,7 +672,7 @@ cncf:
   - name: KubeFleet
     stage: sandbox
     github: https://github.com/kubefleet-dev/kubefleet
-    docs: https://github.com/kubefleet-dev/kubefleet
+    docs: https://kubefleet.dev/
     description: A multi-cluster solution that enables users to effectively manage
       their applications running in multiple Kubernetes clusters.
   - name: Kubernetes
