@@ -339,6 +339,12 @@ cncf:
     docs: https://www.athenz.io
     description: Open source platform for X.509 certificate based service authentication
       and fine grained access control in dynamic infrastructures
+  - name: OAuth2 Proxy
+    stage: sandbox
+    github: https://github.com/oauth2-proxy/oauth2-proxy
+    docs: https://oauth2-proxy.github.io/oauth2-proxy/
+    description: A generic reverse proxy that provides authentication with Google,
+      Azure, OpenID Connect and many more identity providers.
   - name: SPIFFE
     stage: graduated
     github: https://github.com/spiffe/spiffe
@@ -738,6 +744,11 @@ cncf:
     github: https://github.com/k8gb-io/k8gb
     docs: https://www.k8gb.io
     description: https://www.k8gb.io
+  - name: Oxia
+    stage: sandbox
+    github: https://github.com/oxia-db/oxia
+    docs: https://oxia-db.github.io
+    description: Oxia is a scalable metadata store and coordination system
   - name: Xline
     stage: archived
     github: https://github.com/xline-kv/Xline
@@ -958,6 +969,12 @@ cncf:
     docs: https://carvel.dev
     description: Carvel provides a set of reliable, single-purpose, composable tools
       that aid in your application building, configuration, and deployment to Kubernetes.
+  - name: Dalec
+    stage: sandbox
+    github: https://github.com/project-dalec/dalec
+    docs: https://github.com/project-dalec/dalec
+    description: Dalec provides a declarative format for building system packages
+      and containers from those packages in a secure way for supply chain security.
   - name: Dapr
     stage: graduated
     github: https://github.com/dapr/dapr
