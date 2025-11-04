@@ -264,6 +264,12 @@ cncf:
     github: https://github.com/notaryproject/notation
     docs: https://notaryproject.dev/
     description: https://notaryproject.dev/
+  - name: OAuth2 Proxy
+    stage: sandbox
+    github: https://github.com/oauth2-proxy/oauth2-proxy
+    docs: https://oauth2-proxy.github.io/oauth2-proxy/
+    description: A generic reverse proxy that provides authentication with Google,
+      Azure, OpenID Connect and many more identity providers.
   - name: Open Policy Agent (OPA)
     stage: graduated
     github: https://github.com/open-policy-agent/opa
@@ -339,12 +345,6 @@ cncf:
     docs: https://www.athenz.io
     description: Open source platform for X.509 certificate based service authentication
       and fine grained access control in dynamic infrastructures
-  - name: OAuth2 Proxy
-    stage: sandbox
-    github: https://github.com/oauth2-proxy/oauth2-proxy
-    docs: https://oauth2-proxy.github.io/oauth2-proxy/
-    description: A generic reverse proxy that provides authentication with Google,
-      Azure, OpenID Connect and many more identity providers.
   - name: SPIFFE
     stage: graduated
     github: https://github.com/spiffe/spiffe
@@ -503,8 +503,8 @@ cncf:
     description: https://virtual-kubelet.io/
   - name: Interlink
     stage: sandbox
-    github: https://github.com/interTwin-eu/interLink
-    docs: https://intertwin-eu.github.io/interLink/
+    github: https://github.com/interlink-hq/interLink
+    docs: https://interlink-project.dev
     description: InterLink aims to provide an abstraction for the execution of a Kubernetes
       pod on any remote resource capable of managing a Container execution lifecycle
       thanks to the Virtual Kubelet interface. It allows you to extend your cloud
