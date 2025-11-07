@@ -1,0 +1,29 @@
+<svg xmlns='http://www.w3.org/2000/svg' width='860' height='420' font-family='Helvetica,Arial,sans-serif'>
+  <style>
+    .title{font-size:20px;font-weight:700}
+    .t{font-size:14px;fill:#222}
+    .f{font-family:Menlo,Consolas,monospace}
+    .box{fill:#fff;stroke:#1976d2}
+    .hint{fill:#e8f5e9;stroke:#43a047}
+  </style>
+  <rect x='0' y='0' width='860' height='420' fill='#fafafa' stroke='#ccc'/>
+  <text x='430' y='30' text-anchor='middle' class='title'>节点规格估算 (示意)</text>
+
+  <g transform='translate(40,60)'>
+    <rect x='0' y='0' width='780' height='110' class='box'/>
+    <text x='20' y='30' class='t'>估算公式：</text>
+    <text x='40' y='60' class='t f'>机器资源 ≈ ( 单Pod平均资源 × 110 ) ÷ 超卖系数 ÷ 系统预留</text>
+    <text x='40' y='88' class='t'>• 110 为单节点 Pod 数建议上限</text>
+    <text x='40' y='108' class='t'>• 超卖系数 1.5 表示申请 1.5c 仅预留 1c</text>
+  </g>
+
+  <g transform='translate(40,190)'>
+    <rect x='0' y='0' width='780' height='130' class='hint'/>
+    <text x='20' y='30' class='t'>示例（Java 为主，1c:4G）：</text>
+    <text x='40' y='60' class='t f'>CPU:  (1 × 110) ÷ 1.5 ÷ 0.8 ≈ 92 core</text>
+    <text x='40' y='90' class='t f'>内存: (4 × 110) ÷ 1.5 ÷ 0.8 ≈ 367 GiB → 512 GiB 规格</text>
+    <text x='40' y='115' class='t'>按真实负载修正：中间件通常更偏内存，应单独估算</text>
+  </g>
+
+  <text x='430' y='360' text-anchor='middle' font-size='12' fill='#555'>目标：少于 110 Pods/节点，避免超配与上下文切换放大</text>
+</svg>

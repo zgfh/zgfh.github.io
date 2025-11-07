@@ -1,0 +1,47 @@
+<svg xmlns='http://www.w3.org/2000/svg' width='860' height='360' font-family='Helvetica,Arial,sans-serif'>
+  <style>
+    .title{font-size:20px;font-weight:700}
+    .col{fill:#fff;stroke:#1976d2}
+    .h{font-weight:700;fill:#1976d2}
+    .t{font-size:13px;fill:#222}
+    .ok{fill:#c8e6c9}
+    .warn{fill:#ffe0b2}
+  </style>
+  <rect x='0' y='0' width='860' height='360' fill='#fafafa' stroke='#ccc'/>
+  <text x='430' y='30' text-anchor='middle' class='title'>容器网络选型对比</text>
+
+  <g transform='translate(40,60)'>
+    <rect x='0' y='0' width='240' height='260' class='col'/>
+    <text x='120' y='25' text-anchor='middle' class='h'>Calico (直通)</text>
+    <g class='t'>
+      <text x='16' y='60'>• 简单、路由表直通，易排障</text>
+      <text x='16' y='84'>• 社区成熟，文档多</text>
+      <text x='16' y='108'>• 性能中等，规则数随规模增长</text>
+      <text x='16' y='132'>• 适合通用业务场景</text>
+    </g>
+  </g>
+
+  <g transform='translate(310,60)'>
+    <rect x='0' y='0' width='240' height='260' class='col'/>
+    <text x='120' y='25' text-anchor='middle' class='h'>Cilium (eBPF)</text>
+    <g class='t'>
+      <text x='16' y='60'>• 高性能、可替代 kube-proxy</text>
+      <text x='16' y='84'>• L4/L7 策略与可观测性强</text>
+      <text x='16' y='108'>• 维护门槛相对更高</text>
+      <text x='16' y='132'>• 团队有能力时优选</text>
+    </g>
+  </g>
+
+  <g transform='translate(580,60)'>
+    <rect x='0' y='0' width='240' height='260' class='col'/>
+    <text x='120' y='25' text-anchor='middle' class='h'>MacVLAN (+IPAM)</text>
+    <g class='t'>
+      <text x='16' y='60'>• 类虚机网络，IP 审计友好</text>
+      <text x='16' y='84'>• 复用 IaaS 网络与运维体系</text>
+      <text x='16' y='108'>• 需规划底层网段与容量</text>
+      <text x='16' y='132'>• 金融/大规模推荐 (eg. Spiderpool)</text>
+    </g>
+  </g>
+
+  <text x='430' y='330' text-anchor='middle' font-size='12' fill='#555'>选择依据：团队能力、规模、合规/审计、性能需求</text>
+</svg>

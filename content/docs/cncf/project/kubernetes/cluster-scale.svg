@@ -1,0 +1,35 @@
+<svg xmlns='http://www.w3.org/2000/svg' width='760' height='360' font-family='Helvetica,Arial,sans-serif'>
+  <style>
+    .title{font-size:20px;font-weight:700}
+    .cap{font-size:13px;fill:#333}
+    .limit{fill:#1976d2}
+    .advice{fill:#43a047}
+    .line{stroke:#555;stroke-width:1}
+  </style>
+  <rect x='0' y='0' width='760' height='360' fill='#fafafa' stroke='#ccc'/>
+  <text x='380' y='30' text-anchor='middle' class='title'>Kubernetes 集群规模关键指标 (官方 vs 建议)</text>
+  <g transform='translate(60,70)'>
+    <text class='cap' x='0' y='0'>节点数 (Nodes)</text>
+    <line x1='0' y1='10' x2='640' y2='10' class='line'/>
+    <rect x='0' y='25' width='640' height='28' fill='#e3f2fd' stroke='#1976d2'/>
+    <rect x='0' y='25' width='64' height='28' class='advice' fill='#c8e6c9' stroke='#43a047'/>
+    <text x='645' y='44' font-size='12' fill='#1976d2'>5000 官方上限</text>
+    <text x='66' y='44' font-size='12' fill='#2e7d32'>~500 建议</text>
+  </g>
+  <g transform='translate(60,150)'>
+    <text class='cap' x='0' y='0'>总 Pod 数 (Pods)</text>
+    <line x1='0' y1='10' x2='640' y2='10' class='line'/>
+    <rect x='0' y='25' width='640' height='28' fill='#e3f2fd' stroke='#1976d2'/>
+    <rect x='0' y='25' width='256' height='28' class='advice' fill='#c8e6c9' stroke='#43a047'/>
+    <text x='645' y='44' font-size='12' fill='#1976d2'>150,000 官方上限</text>
+    <text x='258' y='44' font-size='12' fill='#2e7d32'>~60,000 建议</text>
+  </g>
+  <g transform='translate(60,230)'>
+    <text class='cap' x='0' y='0'>单节点 Pod 数 (Pods / Node)</text>
+    <line x1='0' y1='10' x2='640' y2='10' class='line'/>
+    <rect x='0' y='25' width='470' height='28' fill='#e3f2fd' stroke='#1976d2'/>
+    <rect x='0' y='25' width='470' height='28' class='advice' fill='#c8e6c9' stroke='#43a047'/>
+    <text x='472' y='44' font-size='12' fill='#2e7d32'>&lt;=110 官方与实践一致</text>
+  </g>
+  <text x='380' y='320' font-size='12' fill='#555'>绿色: 建议规模 | 蓝色: 官方可达上限 (超大集群成本和复杂度显著上升)</text>
+</svg>
