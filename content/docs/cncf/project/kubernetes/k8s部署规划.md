@@ -29,17 +29,29 @@ A: 集群越大，维护难度越大，各组件更容易触发性能瓶颈，�
   比如：
 
   1. etcd：当对象数与写入 QPS 持续上升，压缩与事务延迟会明显增大，需要分片或替换。
+
       字节的方案：自研替代 etcd 的存储组件 <https://github.com/kubewharf/kubebrain/blob/main/docs/design_in_detail_cn.md>
+
       蚂蚁的方案：分多个 etcd 存储 <https://www.sofastack.tech/blog/ant-massive-sigma-cluster-etcd-splitting-in-practice/>
+
       阿里：修改了 etcd 代码 <https://zhuanlan.zhihu.com/p/657824957>
+
   2. apiserver：仅仅是海量节点的 kubelet 心跳与各类 Controller/Operator 的并发请求会产生就有高的 QPS，需要扩容、限流与网关分流等规划。
+
       字节的方案：自研 KubeGateway 组件 <https://zhuanlan.zhihu.com/p/546398348>
+
       阿里：<https://zhuanlan.zhihu.com/p/657824957>
+
   3. scheduler：大规模集群下，Pod 并发创建量高；默认调度串行绑定，一个一个调度会导致排队时间显著增加。
+
       社区调优参考：<https://kubernetes.io/docs/concepts/scheduling-eviction/scheduler-perf-tuning/>
+
       其他大厂通常自研调度器：<https://zhuanlan.zhihu.com/p/563944955>
+
   4. controller 与 operator：瓶颈主要源于 List/Watch 机制。其会将目标资源全量缓存到内存并持续 Watch 变化；当对象规模巨大时，启动全量 List 耗时（分钟级）、内存占用暴涨，事件吞吐可能跟不上（控制器通常逐条处理事件）。
+
   5. 网络：取决于网络方案。例如使用 Calico 时，节点上的路由/策略规则会非常多。一般推荐下沉到 IaaS 网络能力（如 MacVLAN 等）承载复杂度。
+
   6. 故障爆炸半径：出现故障后，受影响的 Pod 数量多，影响面广。
 
 ![超大集群典型瓶颈示意](./mega-cluster-issues.svg)
@@ -51,6 +63,7 @@ A: 集群越大，维护难度越大，各组件更容易触发性能瓶颈，�
 是否新建集群没有统一标准，以下从稳定性、维护与隔离等维度给出参考：
 
 拆分的好处：集群更小稳定性更高；同类业务归群管理更方便。
+
 合并的好处：集群数量更少，统一运维与资源利用率更高。
 
 1. 网络区隔离：若存在互联网区/内网区等严格隔离的安全域，建议每个网络区独立一个集群。比如银行等,会划分互联网区和内网区等,则推荐每个网络区一个集群
@@ -66,7 +79,9 @@ A: 集群越大，维护难度越大，各组件更容易触发性能瓶颈，�
 ## 网络选型
 
 1. Calico：常规场景推荐使用 Calico 直通/BGP 模式，架构简单，基于 Linux 路由表实现。网络或 Linux 运维同学稍加学习即可完成日常维护与应急处理。
+
 2. Cilium：基于内核 eBPF 的高性能方案，功能强大，支持 L4/L7 与网关能力，可替代 kube-proxy，观测能力也很强；团队具备相应维护能力时推荐采用。
+
 3. MacVLAN：适用于对 IP 审计/合规要求高、规模较大的场景，使容器网络更贴近虚拟机网络形态，可复用现有 IaaS 网络管理平台/工具/规范（强烈推荐使用道客开源的 [Spiderpool](https://github.com/spidernet-io/spiderpool)，已在大规模金融客户生产落地，稳定且功能丰富）。
 
 ![容器网络方案对比](./network-options.svg)
