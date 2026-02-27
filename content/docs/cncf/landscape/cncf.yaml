@@ -88,7 +88,7 @@ cncf:
     github: https://github.com/meshery/meshery
     docs: https://meshery.io
     description: https://meshery.io
-  - name: Metal³
+  - name: metal3-io
     stage: incubating
     github: https://github.com/metal3-io/baremetal-operator
     docs: https://metal3.io/
@@ -164,6 +164,27 @@ cncf:
     docs: https://cartography.dev
     description: Cartography is a Python tool that consolidates infrastructure assets
       and the relationships between them in an intuitive graph view.
+  - name: Cedar
+    stage: sandbox
+    github: https://github.com/cedar-policy/cedar
+    docs: https://cedarpolicy.com
+    description: Cedar is an open source authorization policy language that enables
+      developers to express fine-grained permissions as easy-to-understand policies
+      enforced in their applications, and decouple access control from application
+      logic. Cedar is designed to be ergonomic, fast, safe, and analyzable using automated
+      reasoning. Cedar's simple and intuitive syntax supports common authorization
+      use-cases with readable policies, naturally expressing concepts from role-based,
+      attribute-based, and relation-based access control models. Cedar's policy structure
+      enables authorization requests to be decided quickly. Its policy validator uses
+      optional typing to help policy writers avoid mistakes, but not get in their
+      way. Cedar's design has been finely balanced to allow for a sound, complete,
+      and decidable logical encoding, which enables precise automated analysis of
+      Cedar policies, e.g., to ensure that policy refactoring preserves existing permissions.
+      Cedar's language specification has been formally verified using a theorem prover
+      to satisfy key security properties like "deny trumps allow," and its implementation
+      in Rust undergoes rigorous differential random testing against its formal specification.
+      By combining mathematical rigor with developer-friendly design, Cedar offers
+      a practical approach to secure, maintainable authorization for modern applications.
   - name: cert-manager
     stage: graduated
     github: https://github.com/cert-manager/cert-manager
@@ -187,8 +208,8 @@ cncf:
   - name: Copa
     stage: sandbox
     github: https://github.com/project-copacetic/copacetic
-    docs: https://github.com/project-copacetic/copacetic
-    description: https://github.com/project-copacetic/copacetic
+    docs: https://project-copacetic.github.io/copacetic/
+    description: CLI tool for directly patching container image vulnerabilities
   - name: Curiefense
     stage: archived
     github: null
@@ -592,6 +613,18 @@ cncf:
     description: Capsule implements a multi-tenant and policy-based environment in
       your Kubernetes cluster. It is designed as a micro-services-based ecosystem
       with the minimalist approach, leveraging only on upstream Kubernetes.
+  - name: CoHDI
+    stage: sandbox
+    github: https://github.com/CoHDI
+    docs: https://github.com/CoHDI
+    description: Enables dynamic device scaling using Composable Hardware Disaggregated
+      Infrastructure (CoHDI). CoHDI is a community-driven, standards-based open ecosystem
+      for next-generation architectures and frameworks built on Composable Hardware
+      Disaggregated Infrastructure. The objective is to bridge the gap between Kubernetes
+      and CoHDI by collaborating with the Dynamic Resource Allocation, Autoscaler,
+      and Scheduler projects. This enables data center operators to realize the benefits
+      of cost efficiency, high availability, and sustainability through a disaggregated
+      computing system.
   - name: Clusternet
     stage: sandbox
     github: https://github.com/clusternet/clusternet
@@ -620,7 +653,7 @@ cncf:
     description: Eraser uses vulnerability data to remove non-running images from
       all Kubernetes nodes in a cluster.
   - name: Fluid
-    stage: sandbox
+    stage: incubating
     github: https://github.com/fluid-cloudnative/fluid
     docs: https://fluid-cloudnative.github.io/
     description: Fluid is an orchestration platform for elastic data abstraction and
@@ -974,7 +1007,7 @@ cncf:
   - name: Dalec
     stage: sandbox
     github: https://github.com/project-dalec/dalec
-    docs: https://github.com/project-dalec/dalec
+    docs: https://project-dalec.github.io/dalec/
     description: Dalec provides a declarative format for building system packages
       and containers from those packages in a secure way for supply chain security.
   - name: Dapr
@@ -1140,6 +1173,15 @@ cncf:
     github: https://github.com/open-gitops/project
     docs: https://opengitops.dev/
     description: https://opengitops.dev/
+  - name: OpenChoreo
+    stage: sandbox
+    github: https://github.com/openchoreo/openchoreo
+    docs: https://openchoreo.dev
+    description: OpenChoreo is a developer platform for Kubernetes offering development
+      and architecture abstractions, a Backstage-powered developer portal, application
+      CI/CD, GitOps, and observability. It composes CNCF and complementary projects
+      into a modular, extensible framework that provides both strong governance for
+      platform engineers and simplified abstractions for developers.
   - name: OpenKruise
     stage: incubating
     github: https://github.com/openkruise/kruise
@@ -1188,6 +1230,14 @@ cncf:
       clouds and providing users/customers with managed Kubernetes,  KubeVirt-based
       VMs, databases as a service, NATS, message brokers, etc. with GPU support in
       VMs and Kubernetes clusters.
+  - name: KubeElasti
+    stage: sandbox
+    github: https://github.com/truefoundry/KubeElasti
+    docs: https://kubeelasti.dev
+    description: Auto scale-to-zero pods when idle and scale up pods when traffic
+      arrives, without losing any requests. KubeElasti uses a smart proxy that queues
+      incoming requests while scaling up targets, ensuring no request loss. It works
+      with existing Kubernetes services and deployments without requiring code changes.
   - name: SlimFaaS
     stage: sandbox
     github: https://github.com/SlimPlanet/SlimFaas
@@ -1240,6 +1290,18 @@ cncf:
     github: https://github.com/foniod/foniod
     docs: https://ingraind.org/
     description: https://ingraind.org/
+  - name: Headlamp
+    stage: sandbox
+    github: https://github.com/kubernetes-sigs/headlamp
+    docs: https://headlamp.dev
+    description: Extensible open source multi-cluster Kubernetes user interface
+  - name: HolmesGPT
+    stage: sandbox
+    github: https://github.com/HolmesGPT/holmesgpt
+    docs: https://holmesgpt.dev
+    description: HolmesGPT is an AI agent that automates cloud-native troubleshooting,
+      bridging knowledge gaps by investigating alerts, executing runbooks, and correlating
+      observability data in cloud-native platforms.
   - name: Inspektor Gadget
     stage: sandbox
     github: https://github.com/inspektor-gadget/inspektor-gadget
@@ -1317,6 +1379,12 @@ cncf:
     github: https://github.com/trickstercache/trickster
     docs: https://trickstercache.org
     description: https://trickstercache.org
+  - name: Spin
+    stage: sandbox
+    github: https://github.com/spinframework/spin
+    docs: https://spinframework.dev
+    description: Spin is a framework for building and deploying serverless applications
+      in WebAssembly.
   - name: SpinKube
     stage: sandbox
     github: https://github.com/spinframework/spin-operator
