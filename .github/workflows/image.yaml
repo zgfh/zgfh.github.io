@@ -50,6 +50,7 @@ jobs:
           tags: |
             registry.cn-shanghai.aliyuncs.com/daozzg-prod/zzg_blog:latest
             registry.cn-shanghai.aliyuncs.com/daozzg-prod/zzg_blog:${{ env.SHORT_SHA }}
-            # ghcr.io/${{ github.repository_owner }}/zzg_blog:latest
-            # ghcr.io/${{ github.repository_owner }}/zzg_blog:${{ env.SHORT_SHA }}
+            
+          # ghcr.io/${{ github.repository_owner }}/zzg_blog:latest
+          # ghcr.io/${{ github.repository_owner }}/zzg_blog:${{ env.SHORT_SHA }}
           # 支持阿里云与GitHub仓库，latest及短commit id两种tag
