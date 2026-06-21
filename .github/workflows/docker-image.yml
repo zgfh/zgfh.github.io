@@ -2,7 +2,7 @@ name: Build and Push Multi-arch Image
 
 on:
   push:
-    branches: [ master ]
+    branches: [ main ]
     tags: [ 'v*' ]          # 打 v 开头的 tag 也会触发构建
   workflow_dispatch:         # 支持在 Actions 页面手动触发
 
