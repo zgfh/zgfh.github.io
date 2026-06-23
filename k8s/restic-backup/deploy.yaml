@@ -1,0 +1,189 @@
+# ==============================================================================
+# restic 双仓库异地备份 CronJob（每天 02:00 UTC 执行）
+# ==============================================================================
+# 使用前请修改下面标注了 <-- 的行:
+#   1. Secret 中的 S3 凭证和密码
+#   2. CronJob 末尾的 volumes 部分（PVC 名称 或 hostPath 路径）
+#   3. 如需调整执行时间，修改 cronjob.spec.schedule
+# ==============================================================================
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: restic-backup-secrets
+  namespace: default
+type: Opaque
+stringData:
+  # --- S3 仓库 1 ---                           # <-- 修改为你的真实凭证
+  restic-repo-1: "s3:s3.amazonaws.com/my-backup-bucket-1"
+  restic-password-1: "my-strong-password-1"
+  aws-access-key-1: "AKIAAAA1"
+  aws-secret-key-1: "SECRET1"
+  # --- S3 仓库 2 ---                           # <-- 修改为你的真实凭证
+  restic-repo-2: "s3:s3.amazonaws.com/my-backup-bucket-2"
+  restic-password-2: "my-strong-password-2"
+  aws-access-key-2: "AKIAAAA2"
+  aws-secret-key-2: "SECRET2"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: restic-backup-script
+  namespace: default
+data:
+  backup.sh: |
+    #!/bin/bash
+    set -e
+
+    SOURCE_DIR="${SOURCE_DIR:-/data/to/backup}"
+    KEEP_DAILY="${KEEP_DAILY:-7}"
+    KEEP_WEEKLY="${KEEP_WEEKLY:-4}"
+    KEEP_MONTHLY="${KEEP_MONTHLY:-3}"
+    KEEP_YEARLY="${KEEP_YEARLY:-1}"
+
+    # ===== 备份到 S3 仓库 1 =====
+    export RESTIC_REPOSITORY="$RESTIC_REPO_1"
+    export RESTIC_PASSWORD="$RESTIC_PASSWORD_1"
+    export AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_1"
+    export AWS_SECRET_ACCESS_KEY="$AWS_SECRET_KEY_1"
+
+    echo "=== [$(date)] 开始备份到仓库 1: $RESTIC_REPOSITORY ==="
+    restic backup "$SOURCE_DIR" --tag daily --tag primary
+    restic forget \
+      --keep-daily  "$KEEP_DAILY" \
+      --keep-weekly "$KEEP_WEEKLY" \
+      --keep-monthly "$KEEP_MONTHLY" \
+      --keep-yearly  "$KEEP_YEARLY" \
+      --prune
+    restic check
+    echo "=== [$(date)] 仓库 1 完成 ==="
+
+    # ===== 备份到 S3 仓库 2 =====
+    export RESTIC_REPOSITORY="$RESTIC_REPO_2"
+    export RESTIC_PASSWORD="$RESTIC_PASSWORD_2"
+    export AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_2"
+    export AWS_SECRET_ACCESS_KEY="$AWS_SECRET_KEY_2"
+
+    echo "=== [$(date)] 开始备份到仓库 2: $RESTIC_REPOSITORY ==="
+    restic backup "$SOURCE_DIR" --tag daily --tag secondary
+    restic forget \
+      --keep-daily  "$KEEP_DAILY" \
+      --keep-weekly "$KEEP_WEEKLY" \
+      --keep-monthly "$KEEP_MONTHLY" \
+      --keep-yearly  "$KEEP_YEARLY" \
+      --prune
+    restic check
+    echo "=== [$(date)] 双仓库备份全部完成 ==="
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: restic-backup
+  namespace: default
+  labels:
+    app.kubernetes.io/name: restic-backup
+spec:
+  schedule: "0 2 * * *"                 # <-- 每天 02:00 UTC，可按需修改
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 600
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      activeDeadlineSeconds: 7200       # Job 最长运行 2 小时
+      template:
+        metadata:
+          labels:
+            app: restic-backup
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: restic
+              image: restic/restic:0.17.3
+              imagePullPolicy: IfNotPresent
+              command: ["/bin/bash", "/scripts/backup.sh"]
+              env:
+                # --- 仓库 1 凭证 ---
+                - name: RESTIC_REPO_1
+                  valueFrom:
+                    secretKeyRef:
+                      name: restic-backup-secrets
+                      key: restic-repo-1
+                - name: RESTIC_PASSWORD_1
+                  valueFrom:
+                    secretKeyRef:
+                      name: restic-backup-secrets
+                      key: restic-password-1
+                - name: AWS_ACCESS_KEY_1
+                  valueFrom:
+                    secretKeyRef:
+                      name: restic-backup-secrets
+                      key: aws-access-key-1
+                - name: AWS_SECRET_KEY_1
+                  valueFrom:
+                    secretKeyRef:
+                      name: restic-backup-secrets
+                      key: aws-secret-key-1
+                # --- 仓库 2 凭证 ---
+                - name: RESTIC_REPO_2
+                  valueFrom:
+                    secretKeyRef:
+                      name: restic-backup-secrets
+                      key: restic-repo-2
+                - name: RESTIC_PASSWORD_2
+                  valueFrom:
+                    secretKeyRef:
+                      name: restic-backup-secrets
+                      key: restic-password-2
+                - name: AWS_ACCESS_KEY_2
+                  valueFrom:
+                    secretKeyRef:
+                      name: restic-backup-secrets
+                      key: aws-access-key-2
+                - name: AWS_SECRET_KEY_2
+                  valueFrom:
+                    secretKeyRef:
+                      name: restic-backup-secrets
+                      key: aws-secret-key-2
+                # --- 备份参数（可按需修改） ---
+                - name: SOURCE_DIR
+                  value: "/data/to/backup"
+                - name: KEEP_DAILY
+                  value: "7"
+                - name: KEEP_WEEKLY
+                  value: "4"
+                - name: KEEP_MONTHLY
+                  value: "3"
+                - name: KEEP_YEARLY
+                  value: "1"
+              volumeMounts:
+                - name: backup-script
+                  mountPath: /scripts
+                  readOnly: true
+                - name: source-data
+                  mountPath: /data/to/backup
+                  readOnly: true
+              resources:
+                requests:
+                  cpu: 100m
+                  memory: 128Mi
+                limits:
+                  cpu: 500m
+                  memory: 512Mi
+          volumes:
+            - name: backup-script
+              configMap:
+                name: restic-backup-script
+                defaultMode: 0755
+            - name: source-data
+              # ============================================================
+              # 选择你的数据来源:
+              #   A) PVC 方式:
+              persistentVolumeClaim:
+                claimName: source-data-pvc              # <-- 修改为你的 PVC 名称
+              #   B) hostPath 方式（取消注释，注释掉上面 PVC 部分）:
+              # hostPath:
+              #   path: /data/to/backup                  # <-- 修改为你的实际路径
+              #   type: Directory
+              # ============================================================
