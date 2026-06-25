@@ -77,13 +77,15 @@ tags: ['tag1']
 |------|------|---------|
 | `2015-2018/` | 早期文章归档 | 手动 |
 | `ai/` | AI 相关笔记 | 手动 |
-| `cncf/` | CNCF 项目变更记录 | **程序自动生成** |
+| `cncf/` | CNCF 项目单组件知识（介绍/安装/配置/FAQ）+ 自动生成数据 | 混合维护 |
 | `db/` | 数据库/中间件笔记 | 手动 |
 | `ios/` | iOS 开发笔记 | 手动 |
 | `iot/` | 物联网/开发板笔记 | 手动 |
+| `k8s/` | K8s 跨组件实践经验（CI/CD、部署、稳定性等） | 手动 |
 | `linux/` | Linux 相关笔记 | 手动 |
+| `web/` | Web 安全与前端相关笔记 | 手动 |
 
-### cncf/ 目录（自动生成，不要手动编辑）
+### cncf/ 目录（混合维护）
 
 ```
 cncf/
@@ -98,7 +100,8 @@ cncf/
     changelog/       # 项目变更日志（自动生成）
     {project-name}/  # 各 CNCF 项目
       _index.md
-      releasenote/   # 项目版本发布说明（自动生成）
+      {manual-post}.md    # 手写博客：介绍、安装、配置、FAQ 等
+      releasenote/        # 项目版本发布说明（自动生成）
 ```
 
 ### 子目录规范
@@ -118,6 +121,7 @@ content/docs/web/
 
 ### 注意
 
-- **不要手动编辑** `public/`、`resources/`、`content/docs/cncf/` 下自动生成的内容
+- **不要手动编辑** `public/`、`resources/` 目录
+- `content/docs/cncf/` 下 `landscape/`、`changelog/`、`releasenote/` 为自动生成内容，不要手动编辑；`project/{name}/` 下可写手写博客
 - 主题通过 Hugo Module 管理，不要直接修改 `themes/` 目录
 - 多个 Hugo 版本共存，注意兼容性（Dockerfile v0.150.1，Actions v0.147.7）
