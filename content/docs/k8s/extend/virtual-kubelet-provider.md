@@ -6,21 +6,19 @@ date_updated: 2026-06-25T00:00:00.000Z
 tags: ["Kubernetes", "Virtual Kubelet", "Serverless", "Provider"]
 ---
 
-用 2000 字带你彻底搞懂 Virtual Kubelet 的核心机制，手把手实现自定义 Provider。
+用实战代码带你彻底搞懂 Virtual Kubelet 的核心机制，手把手实现自定义 Provider。
 
 ## 为什么需要 Virtual Kubelet？
 
-Kubernetes 已经成为云原生时代的事实标准，但它的节点管理有一个隐含前提：每个节点都对应一台物理机或虚拟机，节点上运行着 Kubelet、容器运行时等组件。当我们需要将 Pod 调度到云厂商的 Serverless 容器（如 AWS Fargate、阿里云 ECI）或边缘设备、HPC 集群时，这个前提就成了限制。
+Kubernetes 成为云原生事实标准，但节点管理有一个隐含前提：每个节点对应一台物理机或虚拟机，运行着 Kubelet、容器运行时。当需要将 Pod 调度到云厂商 Serverless 容器（AWS Fargate、阿里云 ECI）、边缘设备、HPC 集群时，这个前提就成了限制。
 
-Virtual Kubelet（VK）正是为了解决这个问题而生。它是一个开源的 Kubelet 替代实现，允许 Kubernetes 集群将 Pod 调度到"虚拟节点"上，从而无缝对接任意后端服务。
-
-本文将深入剖析 VK 的两大核心流程——节点注册与 Pod 生命周期管理，并给出一个自定义 Provider 的实现框架。
+Virtual Kubelet（VK）正是解决这个问题的——允许 Kubernetes 将 Pod 调度到"虚拟节点"上，无缝对接任意后端。
 
 ---
 
 ## 一、Virtual Kubelet 整体架构
 
-VK 的核心设计可以用一句话概括："Kubernetes API on top, programmable backend"。
+VK 的核心设计："Kubernetes API on top, programmable backend"。
 
 ### 1.1 架构总览图
 
@@ -34,8 +32,7 @@ flowchart TB
 
     subgraph VK["Virtual Kubelet 进程"]
         Watcher["Pod Watcher<br/>（监听 API Server）"]
-        RM["ResourceManager<br/>（访问 ConfigMap/Secret/PVC）"]
-        Store["Provider Store<br/>（插件注册中心）"]
+        Listers["Listers 缓存层<br/>（ConfigMap/Secret/Service）"]
         Dispatcher["操作分发器"]
     end
 
@@ -44,14 +41,12 @@ flowchart TB
         Delete["DeletePod"]
         Update["UpdatePod"]
         GetStatus["GetPodStatus"]
-        Configure["ConfigureNode"]
     end
 
     subgraph Backend["后端资源层"]
         Cloud["云厂商 API<br/>（ECI/Fargate/ACI）"]
-        Edge["边缘设备<br/>（IoT/边缘节点）"]
+        Edge["边缘设备<br/>（IoT/私有机器）"]
         HPC["HPC 集群<br/>（高性能计算）"]
-        Other["其他异构资源"]
     end
 
     User["kubectl apply"] -->|"提交 Pod"| APIServer
@@ -62,10 +57,8 @@ flowchart TB
     Watcher -->|"发现新 Pod/事件"| Dispatcher
     Dispatcher -->|"调用"| Provider
 
-    Provider -->|"查询依赖资源"| RM
-    RM <-->|"读取"| APIServer
-
-    Store -.->|"插件注册<br/>--provider=xxx"| Provider
+    Provider -->|"查询依赖资源"| Listers
+    Listers <-->|"缓存读取"| APIServer
 
     Provider -->|"调用后端 API"| Backend
     Backend -->|"返回资源状态"| Provider
@@ -78,12 +71,12 @@ flowchart TB
 
 ### 1.2 架构分层说明
 
-| 层级   | 组件                             | 核心职责                                           |
-|--------|----------------------------------|---------------------------------------------------|
-| 接入层 | Kubernetes API Server + Scheduler | 接收用户请求，执行调度决策，维护集群状态              |
-| 核心层 | Virtual Kubelet 进程              | 伪装成 Kubelet 节点，监听 API Server 事件，管理插件   |
-| 驱动层 | 自定义 Provider                   | 实现 PodLifecycleHandler 接口，翻译为后端 API 调用   |
-| 资源层 | 异构后端                          | 云 Serverless、边缘设备、HPC 集群等实际运行 Pod 的地方 |
+| 层级   | 组件                               | 核心职责                                           |
+|--------|-----------------------------------|---------------------------------------------------|
+| 接入层 | K8s API Server + Scheduler         | 接收用户请求，执行调度决策，维护集群状态              |
+| 核心层 | Virtual Kubelet 进程               | 伪装成 Kubelet 节点，Watch API Server，管理插件       |
+| 驱动层 | 自定义 Provider                    | 实现 `nodeutil.Provider` 接口，翻译为后端 API 调用   |
+| 资源层 | 异构后端                           | 云 Serverless、边缘设备、HPC 等实际运行 Pod          |
 
 ### 1.3 数据流走向
 
@@ -92,11 +85,11 @@ flowchart LR
     A["用户提交 Pod YAML"] --> B["API Server 接收并存储"]
     B --> C["Scheduler 调度到虚拟节点"]
     C --> D["VK 监听器捕获事件"]
-    D --> E["VK 调用 Provider 方法"]
-    E --> F["Provider 调用后端 API"]
-    F --> G["后端创建/管理资源"]
-    G --> H["Provider 查询状态"]
-    H --> I["VK 回写状态到 API Server"]
+    D --> E["VK 调用 Provider.CreatePod"]
+    E --> F["Provider 转换 Spec + 解析 Volumes"]
+    F --> G["Provider 调用后端 API"]
+    G --> H["后端创建/管理资源"]
+    H --> I["Provider 回写状态到 API Server"]
     I --> J["用户 kubectl get pod 查看"]
 ```
 
@@ -104,88 +97,117 @@ flowchart LR
 
 ## 二、节点注册：让 Kubernetes "认识"你的虚拟节点
 
+VK 提供了两种启动方式：传统的命令行方式（`cmd/virtual-kubelet`）和程序化方式（`nodeutil` 包）。**推荐使用 `nodeutil`**直接在代码中启动，无需依赖 VK 二进制文件。
+
 ### 2.1 注册流程时序图
 
 ```mermaid
 sequenceDiagram
     participant Admin as 管理员
     participant VK as Virtual Kubelet
-    participant Store as Provider Store
     participant Provider as 自定义Provider
     participant APIServer as K8s API Server
 
-    Admin->>VK: 启动命令<br/>--provider=my-provider
-    VK->>Store: 根据名称查找<br/>Provider构造函数
-    Store-->>VK: 返回构造函数
-    VK->>Provider: 实例化 Provider
-    Provider-->>VK: 返回 Provider 实例
-    VK->>Provider: 调用 ConfigureNode(node)
-    Provider->>Provider: 设置 Capacity/Allocatable<br/>Labels/Taints/Addresses
-    Provider-->>VK: 返回修改后的 Node 对象
-    VK->>APIServer: 发送 Node 注册请求
+    Admin->>VK: 启动进程
+    VK->>VK: ClientsetFromEnv 创建 K8s 客户端
+    VK->>Provider: NewComposeProvider(cfg, pc)
+    Provider-->>VK: 返回 Provider + NodeProvider 实例
+    VK->>VK: 构建 NodeSpec（Capacity/Labels/Taints）
+    VK->>APIServer: 注册 Node 到集群
     APIServer-->>VK: 注册成功
     VK-->>Admin: 节点就绪 (Ready)
 ```
 
-### 2.2 核心步骤详解
+### 2.2 核心代码
 
-**第一步：注册 Provider 到 VK**
-
-在代码中通过 `init()` 函数将自定义 Provider 注册到 VK 的全局存储中：
+**入口 main.go：用 `nodeutil.NewNode` 启动**
 
 ```go
-func init() {
-    provider.DefaultStore.Register("my-provider", func(cfg provider.InitConfig) (provider.Provider, error) {
-        return &MyProvider{config: cfg}, nil
-    })
+func main() {
+    ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+    defer cancel()
+
+    // 1. 创建 K8s 客户端
+    kubeClient, err := nodeutil.ClientsetFromEnv(getEnv("KUBECONFIG", ""))
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    // 2. 构建 NodeSpec（决定节点"样貌"）
+    nodeSpec := corev1.Node{
+        ObjectMeta: metav1.ObjectMeta{
+            Name: nodeName,
+            Labels: map[string]string{
+                "kubernetes.io/role": "agent",
+            },
+        },
+        Spec: corev1.NodeSpec{
+            Taints: []corev1.Taint{{
+                Key:    "virtual-kubelet.io/provider",
+                Value:  "my-provider",
+                Effect: corev1.TaintEffectNoSchedule,
+            }},
+        },
+        Status: corev1.NodeStatus{
+            Capacity: corev1.ResourceList{
+                corev1.ResourceCPU:    resource.MustParse("8"),
+                corev1.ResourceMemory: resource.MustParse("16Gi"),
+                corev1.ResourcePods:   resource.MustParse("100"),
+            },
+            NodeInfo: corev1.NodeSystemInfo{
+                OperatingSystem: "linux",
+                Architecture:    "amd64",
+            },
+            Conditions: []corev1.NodeCondition{{
+                Type:   corev1.NodeReady,
+                Status: corev1.ConditionTrue,
+            }},
+        },
+    }
+
+    // 3. 启动虚拟节点
+    n, err := nodeutil.NewNode(
+        nodeName,
+        // 工厂函数：接收 ProviderConfig，返回 Provider
+        func(pc nodeutil.ProviderConfig) (nodeutil.Provider, node.NodeProvider, error) {
+            return provider.NewMyProvider(cfg, pc)
+        },
+        nodeutil.WithNodeConfig(nodeutil.NodeConfig{
+            NodeSpec:              nodeSpec,
+            HTTPListenAddr:        ":10250",
+            NumWorkers:            1,
+        }),
+        nodeutil.WithClient(kubeClient),
+    )
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    if err := n.Run(ctx); err != nil {
+        log.Fatal(err)
+    }
 }
 ```
 
-这是 VK 实现插件化的关键机制——通过 Go 的 `init()` 和全局 Map，将 Provider 的构造函数与名称绑定。启动时只需指定 `--provider=my-provider`，VK 就能找到对应的实现。
+> **关键点**：
+> - `NodeSpec.Status.Capacity` 必须设置——这是调度器分配 Pod 的依据
+> - `Taints` + `Tolerations` 避免普通工作负载被误调度到虚拟节点
+> - `NodeSpec.Status.Conditions` 中 `NodeReady=True` 否则节点不会被调度器考虑
 
-**第二步：实现 ConfigureNode 方法**
-
-这个方法决定了虚拟节点的"样貌"，是节点注册的核心：
+### 2.3 ProviderConfig：VK 传递给 Provider 的上下文
 
 ```go
-func (p *MyProvider) ConfigureNode(ctx context.Context, node *v1.Node) {
-    // 1. 设置资源容量（调度器决策的关键依据）
-    node.Status.Capacity = v1.ResourceList{
-        v1.ResourceCPU:    resource.MustParse("100"),
-        v1.ResourceMemory: resource.MustParse("100Gi"),
-    }
-    node.Status.Allocatable = node.Status.Capacity
-
-    // 2. 设置节点网络信息
-    node.Status.Addresses = []v1.NodeAddress{
-        {Type: v1.NodeInternalIP, Address: "192.168.1.100"},
-        {Type: v1.NodeHostName, Address: "my-virtual-node"},
-    }
-
-    // 3. 设置操作系统和架构
-    node.Status.NodeInfo.OperatingSystem = "linux"
-    node.Status.NodeInfo.Architecture = "amd64"
-
-    // 4. 添加标签（用于亲和性调度）
-    node.Labels["my-provider/region"] = "us-east-1"
-    node.Labels["provider"] = "my-provider"
-
-    // 5. 添加污点（防止普通 Pod 被误调度）
-    node.Spec.Taints = []v1.Taint{{
-        Key:    "my-provider/virtual-node",
-        Effect: v1.TaintEffectNoExecute,
-        Value:  "True",
-    }}
+// nodeutil.ProviderConfig 由 VK 框架构建并传入工厂函数
+type ProviderConfig struct {
+    Pods       corev1listers.PodLister       // Pod 缓存
+    ConfigMaps corev1listers.ConfigMapLister // ConfigMap 缓存（用于解析 volume）
+    Secrets    corev1listers.SecretLister    // Secret 缓存（用于解析 volume）
+    Services   corev1listers.ServiceLister   // Service 缓存（用于 env vars）
+    Node       *v1.Node                      // 节点对象的引用（可修改）
 }
 ```
 
-> ⚠️ **关键注意事项：**
->
-> * **Capacity 必须设置**：这是调度器决定是否将 Pod 分配到该节点的依据，缺失将导致调度失败
-> * **建议添加污点**：虚拟节点通常用于特定场景（如 Serverless 或 GPU 任务），污点配合容忍度可以避免普通工作负载被错误调度
-> * **Labels 支持精细化调度**：用户可以通过 `nodeSelector` 或 `nodeAffinity` 将 Pod 定向到虚拟节点
-
-完成上述两步后，VK 启动时会自动调用 `ConfigureNode` 构造 Node 对象，并通过 API Server 将节点注册到集群中。
+这组 listers 是 Provider 访问集群资源的唯一途径——**不需要直接调 API Server，也不需要在代码里写 informer**。
 
 ---
 
@@ -196,38 +218,33 @@ func (p *MyProvider) ConfigureNode(ctx context.Context, node *v1.Node) {
 ```mermaid
 sequenceDiagram
     participant User as 用户
-    participant Scheduler as K8s Scheduler
     participant APIServer as K8s API Server
     participant VK as Virtual Kubelet
     participant Provider as 自定义Provider
     participant Backend as 后端服务
 
     User->>APIServer: kubectl apply -f pod.yaml
-    APIServer->>Scheduler: 触发调度
-    Scheduler->>APIServer: 绑定 Pod 到虚拟节点
-    APIServer->>VK: 监听发现新 Pod
+    APIServer->>VK: Watch 发现新 Pod
 
     VK->>Provider: CreatePod(pod)
-    Provider->>Provider: 解析 Pod Spec
-    Provider->>Backend: 调用后端 API 创建资源
-    Backend-->>Provider: 返回资源 ID
+    Provider->>Provider: 解析 Volumes（ConfigMap/Secret）
+    Provider->>APIServer: 通过 Lister 读取 ConfigMap/Secret
+    Provider->>Backend: 上传文件 + 创建容器
+    Backend-->>Provider: 创建成功
     Provider-->>VK: 返回 nil
 
-    loop 状态同步（定期轮询）
+    loop 状态同步
         VK->>Provider: GetPodStatus(name, ns)
         Provider->>Backend: 查询资源状态
-        Backend-->>Provider: 返回 Running/Pending/Failed
-        Provider-->>VK: 返回 PodStatus
-        VK->>APIServer: 更新 Pod 状态
+        Backend-->>Provider: Running/Pending/Failed
+        Provider-->>VK: PodStatus
+        VK->>APIServer: 更新 Pod Status
     end
 
     User->>APIServer: kubectl delete pod
-    APIServer->>VK: 监听发现删除事件
     VK->>Provider: DeletePod(pod)
-    Provider->>Backend: 调用后端 API 删除资源
-    Backend-->>Provider: 删除成功
+    Provider->>Backend: 删除资源
     Provider-->>VK: 返回 nil
-    VK->>APIServer: 确认 Pod 已移除
 ```
 
 ### 3.2 状态流转图
@@ -245,174 +262,242 @@ stateDiagram-v2
     Unknown --> [*]: DeletePod 调用
 ```
 
-### 3.3 PodLifecycleHandler 接口详解
-
-VK 的核心接口 `PodLifecycleHandler` 定义了 Pod 管理的全部方法：
+### 3.3 Provider 接口
 
 ```go
-type PodLifecycleHandler interface {
+type Provider interface {
+    // Pod 生命周期
     CreatePod(ctx context.Context, pod *corev1.Pod) error
     UpdatePod(ctx context.Context, pod *corev1.Pod) error
     DeletePod(ctx context.Context, pod *corev1.Pod) error
     GetPod(ctx context.Context, namespace, name string) (*corev1.Pod, error)
     GetPods(ctx context.Context) ([]*corev1.Pod, error)
     GetPodStatus(ctx context.Context, namespace, name string) (*corev1.PodStatus, error)
+
+    // 容器交互
+    GetContainerLogs(ctx context.Context, namespace, podName, containerName string, opts api.ContainerLogOpts) (io.ReadCloser, error)
+    RunInContainer(ctx context.Context, namespace, podName, containerName string, cmd []string, attach api.AttachIO) error
+    PortForward(ctx context.Context, namespace, pod string, port int32, stream io.ReadWriteCloser) error
+
+    // 监控
+    GetStatsSummary(context.Context) (*statsv1alpha1.Summary, error)
+    GetMetricsResource(context.Context) ([]*dto.MetricFamily, error)
 }
 ```
 
-**CreatePod：创建核心逻辑**
+### 3.4 CreatePod：创建核心逻辑（含 Volume 解析）
 
-这是最复杂的方法，需要将 Pod Spec 转换为后端 API 的请求参数：
+这是最复杂的方法，需要处理两件事：**将 Pod Spec 转换为后端参数**，**解析 Volume（ConfigMap/Secret）**。
 
 ```go
-func (p *MyProvider) CreatePod(ctx context.Context, pod *corev1.Pod) error {
-    // 1. 提取容器配置
-    for _, container := range pod.Spec.Containers {
-        image := container.Image
-        cmd := container.Command
-        env := container.Env
-        resources := container.Resources
-    }
+type ComposeProvider struct {
+    configMapLister corev1listers.ConfigMapLister
+    secretLister    corev1listers.SecretLister
+    // ...
+}
 
-    // 2. 查询依赖资源（ConfigMap / Secret / PVC）
-    for _, vol := range pod.Spec.Volumes {
-        if vol.PersistentVolumeClaim != nil {
-            pvc, err := p.rm.GetPersistentVolumeClaim(
-                vol.PersistentVolumeClaim.ClaimName,
-                pod.Namespace,
-            )
-            // 根据 PVC 配置云存储
-        }
-        if vol.ConfigMap != nil {
-            cm, err := p.rm.GetConfigMap(vol.ConfigMap.Name, pod.Namespace)
-            // 获取 ConfigMap 数据
-        }
-    }
+func (p *ComposeProvider) CreatePod(ctx context.Context, pod *corev1.Pod) error {
+    podDir := p.podDir(pod)
 
-    // 3. 调用后端 API 创建资源
-    resourceID, err := p.backendAPI.CreateInstance(image, cmd, env, resources)
+    // 1. 转换 Pod Spec 为 docker-compose.yml
+    composeBytes, err := ConvertToCompose(ctx, pod)
+
+    // 2. 解析 Volume：从 Listers 读取 ConfigMap/Secret 数据
+    extraFiles, err := p.resolveVolumes(ctx, pod)
     if err != nil {
         return err
     }
 
-    // 4. 保存映射关系（Pod UID -> 后端资源 ID）
-    p.cache.Set(pod.UID, resourceID)
+    // 3. 上传文件 + 启动容器
+    p.syncClient.Upload(ctx, podDir, composeBytes, extraFiles)
+    p.sshClient.Exec(ctx, fmt.Sprintf("cd %s && docker compose up -d", podDir))
+
+    // 4. 缓存 Pod 状态为 Running
+    cached := pod.DeepCopy()
+    cached.Status = corev1.PodStatus{
+        Phase: corev1.PodRunning,
+        ContainerStatuses: buildContainerStatuses(pod.Spec.Containers),
+    }
+    p.pods.Store(key(pod), cached)
+
+    // 5. 推送状态更新
+    if p.notifyFunc != nil {
+        p.notifyFunc(cached)
+    }
     return nil
 }
 ```
 
-关键点：
-
-* 使用 `ResourceManager` 而非直接访问 API Server，这是 VK 的设计规范
-* 创建成功后必须返回 `nil`，否则 VK 会持续重试
-* 建议维护本地缓存，记录 Pod 与后端资源的映射关系
-
-**GetPodStatus：状态同步的关键**
-
-VK 定期轮询此方法获取最新状态，并同步到 API Server：
+**resolveVolumes：ConfigMap/Secret 的正确处理方式**
 
 ```go
-func (p *MyProvider) GetPodStatus(ctx context.Context, namespace, name string) (*corev1.PodStatus, error) {
-    resourceID := p.cache.Get(name, namespace)
-    status, err := p.backendAPI.GetStatus(resourceID)
-    if err != nil {
-        // 后端不存在时返回 nil, nil（而非报错）
-        return nil, nil
-    }
+func (p *ComposeProvider) resolveVolumes(ctx context.Context, pod *corev1.Pod) ([]ExtraFile, error) {
+    var files []ExtraFile
 
-    // 转换为 Kubernetes PodStatus
-    podStatus := &corev1.PodStatus{
-        Phase: convertStatus(status.Phase), // Pending/Running/Succeeded/Failed
-        Conditions: []corev1.PodCondition{
-            {Type: corev1.PodReady, Status: corev1.ConditionTrue},
-        },
-        ContainerStatuses: []corev1.ContainerStatus{{
-            Ready: status.Ready,
-            State: corev1.ContainerState{
-                Running: &corev1.ContainerStateRunning{
-                    StartedAt: metav1.NewTime(status.StartTime),
-                },
-            },
-        }},
+    for _, vol := range pod.Spec.Volumes {
+        switch {
+        case vol.ConfigMap != nil:
+            // 通过 Lister 读取（带缓存，不直接调 API）
+            cm, err := p.configMapLister.ConfigMaps(pod.Namespace).Get(vol.ConfigMap.Name)
+            if err != nil {
+                return nil, fmt.Errorf("fetch configmap %s/%s: %w", pod.Namespace, vol.ConfigMap.Name, err)
+            }
+            for key, data := range cm.Data {
+                if !includeVolumeKey(vol.ConfigMap.Items, key) {
+                    continue // 尊重 optional items 过滤
+                }
+                files = append(files, ExtraFile{
+                    Path:    filepath.Join("volumes", vol.Name, key),
+                    Content: []byte(data),
+                })
+            }
+
+        case vol.Secret != nil:
+            secret, err := p.secretLister.Secrets(pod.Namespace).Get(vol.Secret.SecretName)
+            if err != nil {
+                return nil, fmt.Errorf("fetch secret %s/%s: %w", pod.Namespace, vol.Secret.SecretName, err)
+            }
+            for key, data := range secret.Data {
+                if !includeVolumeKey(vol.Secret.Items, key) {
+                    continue
+                }
+                files = append(files, ExtraFile{
+                    Path:    filepath.Join("volumes", vol.Name, key),
+                    Content: data,
+                })
+            }
+
+        case vol.EmptyDir != nil:
+            // EmptyDir 只需要创建一个空目录
+            files = append(files, ExtraFile{
+                Path:    filepath.Join("volumes", vol.Name, ".gitkeep"),
+                Content: []byte{},
+            })
+        }
     }
-    return podStatus, nil
+    return files, nil
+}
+
+// includeVolumeKey 检查 key 是否在 Items 白名单中
+func includeVolumeKey(items []corev1.KeyToPath, key string) bool {
+    if len(items) == 0 {
+        return true // 没有指定 items，所有 key 都包含
+    }
+    for _, item := range items {
+        if item.Key == key {
+            return true
+        }
+    }
+    return false
 }
 ```
 
-> ⚠️ **特别提醒：**
+> **关键点**：
 >
-> * 如果后端资源不存在，必须返回 `nil, nil`，而不是返回错误（VK 会认为是不存在而非异常）
-> * 状态映射需要准确（如后端 `Creating` → K8s `Pending`，`Running` → `Running`）
+> - **使用 Lister 而非直接调 API**：`ProviderConfig` 中的 `ConfigMaps` / `Secrets` listers 由 VK 框架维护，带缓存，性能更好
+> - **必须处理 `Items` 过滤**：`vol.ConfigMap.Items` / `vol.Secret.Items` 指定了白名单，未指定的 key 不应包含
+> - **ConfigMap 同时有 `Data`（字符串）和 `BinaryData`（[]byte）两种格式**，都要处理
+> - **Secret 的 `Data` 是 `map[string][]byte`**，已经 base64 解码过
+> - 创建成功必须返回 `nil`，否则 VK 持续重试
 
-**DeletePod：清理资源**
+### 3.5 GetPodStatus：状态同步
 
 ```go
-func (p *MyProvider) DeletePod(ctx context.Context, pod *corev1.Pod) error {
-    resourceID := p.cache.Get(pod.UID)
-    if resourceID == "" {
-        return nil // 资源已不存在
+func (p *ComposeProvider) GetPodStatus(ctx context.Context, namespace, name string) (*corev1.PodStatus, error) {
+    dir := p.podDir(namespace, name)
+    out, err := p.sshClient.Exec(ctx, fmt.Sprintf("cd %s && docker compose ps --format json 2>&1", dir))
+    if err != nil {
+        // 容器不存在 → 返回 nil, nil
+        return &corev1.PodStatus{Phase: corev1.PodFailed}, nil
     }
 
-    if err := p.backendAPI.DeleteInstance(resourceID); err != nil {
-        return err
-    }
+    // 解析后端状态，映射为 PodStatus
+    status := parseContainerStates(out)
+    return status, nil
+}
+```
 
-    p.cache.Delete(pod.UID)
+### 3.6 DeletePod：清理资源
+
+```go
+func (p *ComposeProvider) DeletePod(ctx context.Context, pod *corev1.Pod) error {
+    dir := p.podDir(pod)
+    // docker compose down -v 会清理容器和网络，然后删除整个目录
+    p.sshClient.Exec(ctx, fmt.Sprintf("cd %s && docker compose down -v 2>&1; rm -rf %s", dir, dir))
+
+    p.pods.Delete(key(pod))
     return nil
 }
 ```
 
 ---
 
-## 四、ResourceManager：查询集群资源的正确方式
+## 四、Volume 处理：ConfigMap / Secret 同步攻略
 
-VK 提供了一个强大的工具——ResourceManager，它是 Provider 访问集群资源的唯一推荐途径：
+Volume 处理是 Provider 开发中最容易踩坑的地方。核心流程：
 
 ```mermaid
-flowchart LR
-    subgraph Provider["自定义 Provider"]
-        CreatePod["CreatePod"]
-    end
+flowchart TB
+    CreatePod["CreatePod 调用"] --> IterVolumes["遍历 pod.Spec.Volumes"]
+    IterVolumes --> ConfigMap?{"vol.ConfigMap != nil?"}
+    IterVolumes --> Secret?{"vol.Secret != nil?"}
+    IterVolumes --> EmptyDir?{"vol.EmptyDir != nil?"}
 
-    subgraph RM["ResourceManager（VK 内置）"]
-        GetCM["GetConfigMap"]
-        GetSecret["GetSecret"]
-        GetPVC["GetPersistentVolumeClaim"]
-        GetPV["GetPersistentVolume"]
-        GetPod["GetPod/GetPods"]
-    end
+    ConfigMap? -->|"是"| GetCM["configMapLister<br/>.ConfigMaps(ns).Get(name)"]
+    GetCM --> IterKeys["遍历 cm.Data 和 cm.BinaryData"]
+    IterKeys --> ItemsFilter{"Items 过滤"}
+    ItemsFilter -->|"通过"| AddFile["添加到 ExtraFiles<br/>路径: volumes/&lt;name&gt;/&lt;key&gt;"]
 
-    subgraph K8s["Kubernetes API Server"]
-        CM["ConfigMap"]
-        Secret["Secret"]
-        PVC["PVC"]
-        PV["PV"]
-        Pod["Pod"]
-    end
+    Secret? -->|"是"| GetSec["secretLister<br/>.Secrets(ns).Get(name)"]
+    GetSec --> IterSecKeys["遍历 secret.Data"]
+    IterSecKeys --> SecFilter{"Items 过滤"}
+    SecFilter -->|"通过"| AddFile
 
-    CreatePod -->|"查询依赖"| RM
-    RM -->|"读取"| K8s
-    K8s -->|"返回数据"| RM
-    RM -->|"返回"| CreatePod
+    EmptyDir? -->|"是"| AddPlaceholder["创建 .gitkeep 占位文件"]
+
+    AddFile --> Upload["SFTP 上传到远程节点"]
+    AddPlaceholder --> Upload
+    Upload --> Mount["容器通过 compose volumes<br/>挂载到指定路径"]
 ```
 
-| 方法                       | 用途              | 常见场景                    |
-|----------------------------|------------------|---------------------------|
-| `GetConfigMap(name, ns)`   | 获取 ConfigMap 数据 | 读取应用配置文件             |
-| `GetSecret(name, ns)`      | 获取 Secret 数据   | 读取数据库密码、TLS 证书     |
-| `GetPersistentVolumeClaim`  | 获取 PVC 配置     | 为 Pod 动态挂载云存储        |
-| `GetPersistentVolume`      | 获取 PV 配置      | 获取云盘 ID、NFS 地址等细节 |
-| `GetPod(name, ns)` / `GetPods()` | 获取 Pod 信息 | 查询 Pod 最新状态或关联资源 |
+### 远程侧的目录结构
 
-```go
-// 使用示例：在 CreatePod 中查询 ConfigMap
-cm, err := rm.GetConfigMap("app-config", "default")
-if err == nil {
-    data := cm.Data // 获取配置数据
-    dbHost := data["DB_HOST"]
-    dbPort := data["DB_PORT"]
-}
+同步完成后，远程节点上的目录结构如下：
+
 ```
+/opt/vk-pods/default/nginx-demo/
+├── docker-compose.yml          # Pod Spec 转换
+├── volumes/
+│   ├── config/                 # ConfigMap volume
+│   │   └── site.conf           # default.conf → site.conf (Items 重命名)
+│   ├── secret/                 # Secret volume
+│   │   ├── username
+│   │   ├── password
+│   │   └── token
+│   └── cache/                  # EmptyDir volume
+│       └── .gitkeep
+```
+
+Compose 文件中以 bind mount 方式挂载：
+
+```yaml
+services:
+  nginx:
+    image: nginx:latest
+    volumes:
+      - "./volumes/config:/etc/nginx/conf.d:ro"
+      - "./volumes/secret:/etc/secret:ro"
+      - "./volumes/cache:/tmp/cache"
+```
+
+### 常见问题
+
+| 问题 | 原因 | 解决 |
+|------|------|------|
+| Pod 一直在 ContainerCreating | `resolveVolumes` 里只打日志，没实际读取数据 | 实现 Lister 调用逻辑 |
+| ConfigMap 更新后 Pod 不生效 | Volume 是一次性同步，后续不会自动更新 | 触发 Pod 重建（kubectl rollout restart） |
+| 文件权限问题 | Secret 的 defaultMode 默认 0644 | 需要在 `vol.Secret.DefaultMode` 中设置 |
+| Items 指定了 key 还是同步了全部 | 没处理 `vol.ConfigMap.Items` 过滤 | 用 `includeVolumeKey` 做白名单检查 |
 
 ---
 
@@ -420,46 +505,77 @@ if err == nil {
 
 1. **UpdatePod 的处理策略**
 
-   如果后端不支持更新（如 Serverless 容器不支持修改 CPU/内存），直接 `return nil` 即可。但如果涉及镜像或环境变量变更，通常需要先删除再重建。
+   如果后端不支持原地更新，最简单可靠的做法是 `DeletePod` + `CreatePod`：
 
-2. **性能优化：实现 PodNotifier 接口**
+   ```go
+   func (p *ComposeProvider) UpdatePod(ctx context.Context, pod *corev1.Pod) error {
+       if err := p.DeletePod(ctx, pod); err != nil {
+           return err
+       }
+       return p.CreatePod(ctx, pod)
+   }
+   ```
 
-   VK 支持主动推送状态变更，避免频繁轮询：
+2. **性能优化：实现 NotifyPods**
+
+   VK 支持主动推送状态变更（避免频繁轮询）：
 
    ```go
    func (p *MyProvider) NotifyPods(ctx context.Context, notifier func(*corev1.Pod)) {
-       // 当后端状态变化时，调用 notifier(pod) 推送更新
+       p.notifyFunc = notifier
+       go p.statusSyncLoop(ctx, notifier)
+   }
+
+   func (p *MyProvider) statusSyncLoop(ctx context.Context, cb func(*corev1.Pod)) {
+       ticker := time.NewTicker(30 * time.Second)
+       defer ticker.Stop()
+       for {
+           select {
+           case <-ctx.Done():
+               return
+           case <-ticker.C:
+               p.pods.Range(func(_, v interface{}) bool {
+                   pod := v.(*corev1.Pod)
+                   status, _ := p.GetPodStatus(ctx, pod.Namespace, pod.Name)
+                   updated := pod.DeepCopy()
+                   updated.Status = *status
+                   cb(updated) // 主动推送
+                   return true
+               })
+           }
+       }
    }
    ```
 
 3. **并发安全**
 
-   VK 会并发调用 Provider 的方法，如果内部维护了缓存（如 Map），操作时必须加锁。
+   VK 会并发调用 Provider 方法，维护本地缓存必须用 `sync.Map` 或加锁。
 
-4. **最终一致性问题**
+4. **错误处理规范**
 
-   `CreatePod` 返回 `nil` 后，VK 立即将该 Pod 标记为调度成功。如果你的后端异步创建资源，建议在确保后端创建成功后再返回，避免状态不一致。
+   | 场景 | 返回 | 含义 |
+   |------|------|------|
+   | 后端资源不存在 | `nil, nil` | VK 认为 Pod 已删除 |
+   | 网络超时 | error | VK 触发重试 |
+   | 权限不足 | error | 记录日志，VK 持续重试 |
+   | 创建成功 | `nil` | VK 标记为调度成功 |
 
-5. **错误处理规范**
+5. **最终一致性**
 
-   * 后端资源不存在 → 返回 `nil, nil`（而非 error）
-   * 网络超时 → 返回 error，触发 VK 重试
-   * 权限不足 → 返回 error，记录日志便于排查
+   `CreatePod` 返回 `nil` 后 VK 立即标记调度成功。如果后端异步创建资源，确保在资源真正就绪后再返回。
 
 ---
 
 ## 六、总结
 
-Virtual Kubelet 通过节点注册和 Pod 生命周期管理两大核心流程，实现了 Kubernetes 与异构后端的无缝对接：
+Virtual Kubelet 通过节点注册和 Pod 生命周期管理，实现 Kubernetes 与异构后端的无缝对接：
 
-| 阶段     | 核心方法        | 本质                                  |
-|----------|----------------|--------------------------------------|
-| 节点注册 | `ConfigureNode` | 构造 Node 对象，向集群"报到"           |
-| Pod 创建 | `CreatePod`     | 将 Pod Spec 转换为后端 API 请求        |
-| 状态同步 | `GetPodStatus`  | 轮询后端状态，映射为 K8s PodStatus    |
-| Pod 删除 | `DeletePod`     | 清理后端资源，移除本地缓存             |
-
-VK 的价值在于：你用标准 Kubernetes YAML 管理 Pod，VK 帮你把它调度到任何地方——云 Serverless、边缘设备、HPC 集群，甚至 IoT 网关。开发者只需关注 Provider 的实现，所有 Kubernetes 侧的交互都由 VK 框架优雅地封装好了。
+| 阶段     | 核心方法        | 本质                                      |
+|----------|----------------|------------------------------------------|
+| 节点注册 | `nodeutil.NewNode` | 构建 NodeSpec，向集群"报到"               |
+| Pod 创建 | `CreatePod`     | 解析 Volumes → 转换 Spec → 调用后端 API    |
+| 状态同步 | `GetPodStatus`  | 轮询后端状态，映射为 K8s PodStatus        |
+| Pod 删除 | `DeletePod`     | 清理后端资源，移除本地缓存                  |
 
 ```mermaid
 flowchart LR
@@ -473,6 +589,6 @@ flowchart LR
 
 ---
 
-如果你正在开发自己的 Provider，建议先从官方的 Mock Provider 开始实践，逐步替换成你自己的后端逻辑。相信读完本文，你已经有了一个清晰的实现蓝图！
+如果你正在开发自己的 Provider，建议参考 [k8s-remote-node](https://github.com/zgfh/k8s-remote-node) 的完整实现。相信读完本文，你已经有了一个清晰的实现蓝图。
 
-> 本文所有代码示例基于 Virtual Kubelet v1.0+，完整源码可参考 [Virtual Kubelet GitHub](https://github.com/virtual-kubelet/virtual-kubelet)。
+> 本文代码基于 Virtual Kubelet v1.12，使用 `nodeutil` API（推荐方式）。完整的 Provider 接口文档参见 [Virtual Kubelet GitHub](https://github.com/virtual-kubelet/virtual-kubelet)。
