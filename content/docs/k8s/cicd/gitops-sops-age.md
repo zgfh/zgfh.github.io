@@ -38,8 +38,7 @@ SOPS + Age 是最轻量的方案：不依赖任何外部服务，私钥只存在
 
 ```bash
 # 安装 age
-brew install age        # macOS
-apt install age         # Ubuntu
+brew install age sops        # macOS
 
 # 生成密钥对
 age-keygen -o age.key
@@ -95,7 +94,7 @@ creation_rules:
 sops -e values-secret.yaml > values-secret.enc.yaml
 
 # 直接编辑加密文件（自动解密打开，保存时重新加密）
-SOPS_AGE_KEY_FILE=~/.age/age.key sops values-secret.enc.yaml
+SOPS_AGE_KEY_FILE=~/.ssh/age.key sops values-secret.enc.yaml
 ```
 
 加密效果示例：
