@@ -65,7 +65,7 @@ class ManualTests(unittest.TestCase):
         self.assertNotIn("<script>", text)
         self.assertNotIn("{{<", text)
         self.assertLess(text.index("第一页"), text.index("第二页"))
-        self.assertIn("/docs/%E8%AF%B4%E6%98%8E%E4%B9%A6/", text)
+        self.assertIn("![第 1 页](./%E5%92%96%E5%95%A1%E6%9C%BA%E8%AF%B4%E6%98%8E%E4%B9%A6-", text)
         images = sorted(article.parent.glob("*.jpg"))
         self.assertEqual(len(images), 2)
         self.assertGreater(Image.open(images[0]).getpixel((0, 0))[0], 240)

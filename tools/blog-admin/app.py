@@ -209,9 +209,9 @@ def create_app(content_root=None, token=None, ocr=None):
                 destination = section / filename
                 shutil.copyfile(stage / f"{i:02}.jpg", destination)
                 published_images.append(destination)
-                # Root-relative URL: images are section resources, not article page resources.
-                url = "/docs/" + quote("说明书", safe="") + "/" + quote(filename, safe="")
-                lines.extend([f"![第 {i} 页]({url})", ""])
+                # Keep the Markdown portable: Hugo resolves this relative to the
+                # content file, as it does for the site's existing articles.
+                lines.extend([f"![第 {i} 页](./{quote(filename)})", ""])
             lines += ["## 图片识别文字", "", "> 以下文字由本地 OCR 自动识别，可能有误，请以原图为准。", ""]
             for i, text in enumerate(texts, 1):
                 lines += [f"### 第 {i} 页", "", format_ocr(text), ""]
