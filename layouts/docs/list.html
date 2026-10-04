@@ -33,19 +33,19 @@
           {{ range .Sections }}
             {{ $pageCount := len .RegularPagesRecursive }}
             
-            <div style="margin-bottom: 1rem; border: 1px solid #e5e7eb; border-radius: 8px; padding: 0.5rem;">
-              <div style="cursor: pointer; display: flex; align-items: center; padding: 0.5rem; background-color: #f9fafb; border-radius: 6px; transition: background-color 0.2s;" onclick="toggleFolder(this)">
-                <span style="margin-right: 0.5rem; transition: transform 0.2s; display: inline-block;">▶</span>
-                <span style="font-weight: 600; color: #374151;">📁 {{ .Title }}</span>
-                <span style="margin-left: auto; font-size: 0.875rem; color: #6b7280;">({{ $pageCount }} 篇文章)</span>
+            <div class="hx:mb-4 hx:rounded-lg hx:border hx:border-gray-200 hx:p-2 dark:hx:border-neutral-800">
+              <div class="hx:flex hx:cursor-pointer hx:items-center hx:rounded-md hx:bg-gray-50 hx:p-2 hx:transition-colors hover:hx:bg-gray-100 dark:hx:bg-neutral-900 dark:hover:hx:bg-neutral-800" onclick="toggleFolder(this)">
+                <span class="hx:mr-2 hx:inline-block hx:transition-transform">▶</span>
+                <span class="hx:font-semibold hx:text-gray-700 dark:hx:text-gray-100">📁 {{ .Title }}</span>
+                <span class="hx:ml-auto hx:text-sm hx:text-gray-500 dark:hx:text-gray-400">({{ $pageCount }} 篇文章)</span>
               </div>
-              <div style="display: none; padding: 0.5rem 0 0 2rem;">
+              <div class="hx:pl-8 hx:pt-2" style="display: none;">
                 <ul style="list-style: none; padding: 0; margin: 0;">
                   {{ range .RegularPagesRecursive }}
-                    <li style="padding: 0.25rem 0;">
-                      <a style="color: var(--hx-color-primary-600); text-decoration: none; display: flex; align-items: center;" href="{{ .Permalink }}">
-                        <span style="margin-right: 0.5rem;">📄</span>
-                        <span style="color: #9ca3af; font-size: 0.875rem; margin-right: 0.5rem;">{{ .Date.Format "2006-01-02" }}</span>
+                    <li class="hx:py-1">
+                      <a class="hx:flex hx:items-center hx:no-underline" style="color: var(--hx-color-primary-600);" href="{{ .Permalink }}">
+                        <span class="hx:mr-2">📄</span>
+                        <span class="hx:mr-2 hx:text-sm hx:text-gray-400 dark:hx:text-gray-500">{{ .Date.Format "2006-01-02" }}</span>
                         <span>{{ .Title }}</span>
                       </a>
                     </li>
@@ -58,19 +58,19 @@
           <!-- 显示当前目录下的直接文章（不在子目录中的） -->
           {{ $directPages := where .RegularPages "Parent" . }}
           {{ if gt (len $directPages) 0 }}
-            <div style="margin-bottom: 1rem; border: 1px solid #e5e7eb; border-radius: 8px; padding: 0.5rem;">
-              <div style="cursor: pointer; display: flex; align-items: center; padding: 0.5rem; background-color: #f9fafb; border-radius: 6px; transition: background-color 0.2s;" onclick="toggleFolder(this)">
-                <span style="margin-right: 0.5rem; transition: transform 0.2s; display: inline-block;">▶</span>
-                <span style="font-weight: 600; color: #374151;">📁 当前目录</span>
-                <span style="margin-left: auto; font-size: 0.875rem; color: #6b7280;">({{ len $directPages }} 篇文章)</span>
+            <div class="hx:mb-4 hx:rounded-lg hx:border hx:border-gray-200 hx:p-2 dark:hx:border-neutral-800">
+              <div class="hx:flex hx:cursor-pointer hx:items-center hx:rounded-md hx:bg-gray-50 hx:p-2 hx:transition-colors hover:hx:bg-gray-100 dark:hx:bg-neutral-900 dark:hover:hx:bg-neutral-800" onclick="toggleFolder(this)">
+                <span class="hx:mr-2 hx:inline-block hx:transition-transform">▶</span>
+                <span class="hx:font-semibold hx:text-gray-700 dark:hx:text-gray-100">📁 当前目录</span>
+                <span class="hx:ml-auto hx:text-sm hx:text-gray-500 dark:hx:text-gray-400">({{ len $directPages }} 篇文章)</span>
               </div>
-              <div style="display: none; padding: 0.5rem 0 0 2rem;">
+              <div class="hx:pl-8 hx:pt-2" style="display: none;">
                 <ul style="list-style: none; padding: 0; margin: 0;">
                   {{ range $directPages }}
-                    <li style="padding: 0.25rem 0;">
-                      <a style="color: var(--hx-color-primary-600); text-decoration: none; display: flex; align-items: center;" href="{{ .Permalink }}">
-                        <span style="margin-right: 0.5rem;">📄</span>
-                        <span style="color: #9ca3af; font-size: 0.875rem; margin-right: 0.5rem;">{{ .Date.Format "2006-01-02" }}</span>
+                    <li class="hx:py-1">
+                      <a class="hx:flex hx:items-center hx:no-underline" style="color: var(--hx-color-primary-600);" href="{{ .Permalink }}">
+                        <span class="hx:mr-2">📄</span>
+                        <span class="hx:mr-2 hx:text-sm hx:text-gray-400 dark:hx:text-gray-500">{{ .Date.Format "2006-01-02" }}</span>
                         <span>{{ .Title }}</span>
                       </a>
                     </li>
