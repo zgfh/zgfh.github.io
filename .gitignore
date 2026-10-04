@@ -22,3 +22,8 @@ node_modules/
 *~
 *.swp
 *.swo
+
+# Local blog admin
+tools/blog-admin/.venv/
+tools/blog-admin/.runtime/
+__pycache__/

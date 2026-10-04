@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>新增博客 · 说明书</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="/static/app.js" defer></script>
+</head>
+<body>
+<main>
+  <header><span class="brand">争光的博客</span><span class="badge">本地后台</span></header>
+  <section id="home">
+    <p class="eyebrow">留住有用的信息</p>
+    <h1>新增一篇博客</h1>
+    <p class="muted">把纸上的说明，变成随时可以找到的记录。</p>
+    <button id="manual-mode" class="mode"><span class="icon">▤</span><span><strong>说明书模式</strong><small>拍照存档 · 多图上传 · 自动识别文字</small></span><span>→</span></button>
+  </section>
+  <section id="editor" hidden>
+    <button id="back" class="link">← 返回新增博客</button>
+    <h1>收好这份说明书</h1>
+    <p class="muted">拍下每一页，剩下的交给本地文字识别。</p>
+    <div id="auth" hidden>
+      <label for="access-code">访问码</label>
+      <p class="muted">请用电脑终端显示的完整地址打开，或粘贴地址中 token= 后的访问码。</p>
+      <input id="access-code" type="password" autocomplete="off">
+      <button id="connect" class="secondary">连接后台</button>
+    </div>
+    <form id="form">
+      <label for="name">产品名称 <span class="required">*</span></label>
+      <input id="name" name="name" placeholder="例如：小米空气净化器" maxlength="70" required>
+      <p id="title-hint" class="hint">将保存为「产品名称说明书.md」</p>
+      <div class="label-row"><label>说明书照片</label><span id="count" class="muted">0 / 30</span></div>
+      <div class="upload-actions">
+        <button type="button" id="camera-button" class="secondary">＋ 拍照添加</button>
+        <button type="button" id="album-button" class="secondary">从相册选择</button>
+      </div>
+      <input id="camera" type="file" accept="image/*" capture="environment" hidden>
+      <input id="album" type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif" multiple hidden>
+      <p class="hint">可多次拍照或批量选择，每张不超过 20 MB，总计不超过 120 MB。支持 HEIC。</p>
+      <div id="empty">▧<p>从封面开始，按页添加照片</p><small>保持纸面平整、文字清晰，识别效果更好</small></div>
+      <ol id="photos" class="photos"></ol>
+      <p id="engine" class="hint">正在连接本地识别服务…</p>
+      <button id="submit" type="submit" class="primary">提交并保存博客</button>
+      <p class="hint center">保存到本地仓库，随后按原有流程发布。</p>
+    </form>
+    <div id="progress" role="status" aria-live="polite" hidden><strong id="progress-text"></strong><p class="hint">识别可能需要几分钟。请保持电脑后台运行。</p></div>
+    <p id="error" role="alert" hidden></p>
+    <section id="success" hidden>
+      <h2>✓ 说明书已保存</h2>
+      <p id="saved-path"></p>
+      <p id="warnings"></p>
+      <details><summary>查看识别文字</summary><div id="ocr-text"></div></details>
+      <button id="another" class="secondary">继续新增说明书</button>
+    </section>
+  </section>
+  <footer>照片和识别都留在这台电脑上。</footer>
+</main>
+</body>
+</html>
