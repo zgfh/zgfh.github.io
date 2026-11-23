@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-COMMIT_SHA=${1:-$(git rev-parse HEAD)}
+COMMIT_REF=${1:-HEAD}
+COMMIT_SHA=$(git rev-parse "$COMMIT_REF")
 ONLINE_URL=${2:-}
 WORKFLOW_FILE=${WORKFLOW_FILE:-pages.yaml}
 POLL_SECONDS=${POLL_SECONDS:-20}
