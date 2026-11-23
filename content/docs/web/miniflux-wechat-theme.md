@@ -2,13 +2,13 @@
 title: '不改源码，把 Miniflux 改成微信订阅号风格'
 slug: miniflux-wechat-theme
 date_published: 2026-11-23T19:40:00+08:00
-date_updated: 2026-11-23T20:00:00+08:00
+date_updated: 2026-11-24T04:21:00+08:00
 tags: ['Miniflux', 'RSS', 'CSS', 'JavaScript', '移动端']
 ---
 
 最近我给自己的 Miniflux 做了一次比较完整的主题改造：把原本偏传统的 RSS 列表，改成更适合手机阅读的微信订阅号风格。
 
-这次改造的重点不是重新开发一个前端，而是尽可能复用 Miniflux 原有能力：不修改 Go 源码，不改数据库，不新增前端服务，只使用用户设置中的 Custom CSS 和 Custom JavaScript 做渐进增强。
+这次改造的重点不是重新开发一个前端，而是尽可能复用 Miniflux 原有能力：不修改 Go 源码，不改数据库，不新增前端服务，只使用用户设置中的 Custom CSS 和 Custom JavaScript 调整界面与交互。
 
 最终实现了文章卡片、封面与摘要、默认风景图、左滑标记已读、空状态、移动端功能区和搜索页面优化。线上效果可以访问：<https://rss.c.daozzg.com>
 
@@ -37,6 +37,32 @@ tags: ['Miniflux', 'RSS', 'CSS', 'JavaScript', '移动端']
 ## 如何配置
 
 这套主题针对 Miniflux 2.3.5 的实际页面结构编写。安装前建议先确认当前版本支持 Custom CSS 和 Custom JavaScript，并在测试账号中验证。
+
+### 下载主题文件
+
+<details>
+<summary>单独查看或下载 CSS 和 JavaScript</summary>
+
+<p><a href="/downloads/miniflux-wechat-theme/miniflux-wechat-theme.css" download="miniflux-wechat-theme.css">下载 Custom CSS</a></p>
+
+<p><a href="/downloads/miniflux-wechat-theme/miniflux-wechat-theme.js" download="miniflux-wechat-theme.js">下载 Custom JavaScript</a></p>
+
+CSS 包含卡片、默认风景图、空状态、分页、移动导航和搜索页样式；JavaScript 负责封面摘要、左滑、空状态识别、分页判断和搜索页面状态。两个文件需要配套使用。
+
+</details>
+
+<details>
+<summary>查看安装位置</summary>
+
+```text
+miniflux-wechat-theme.css
+  → Settings → Custom CSS
+
+miniflux-wechat-theme.js
+  → Settings → Custom JavaScript
+```
+
+</details>
 
 ### 第一步：备份当前设置
 
@@ -121,32 +147,15 @@ Settings → Custom JavaScript
 
 如果浏览器仍显示旧样式，可以关闭当前标签页后重新打开，或者清理该站点缓存。
 
-### 第七步：检查原生功能
+### 最后试一下
 
-视觉正常还不够，至少需要验证：
-
-- 标题和原文链接可以打开；
-- 收藏和取消收藏正常；
-- 标记已读后刷新页面，状态仍然正确；
-- 搜索按钮和键盘回车可以提交；
-- “仅显示未读条目”可以切换；
-- 多页列表的上一页和下一页链接正确；
-- 手机端上下滚动不会误触左滑；
-- 页面没有横向溢出。
+刷新页面，随手试试搜索、收藏和左滑；都正常的话就搞定了 🎉
 
 ### 回滚
 
-如果主题出现兼容问题：
+不喜欢或者遇到兼容问题，就把 CSS、JavaScript 和主题设置换回刚才的备份，刷新页面即可。
 
-1. 清空本次 Custom JavaScript；
-2. 恢复之前备份的 Custom CSS；
-3. 恢复原 Theme；
-4. 根据需要重新启用 Entry Swipe；
-5. 保存并刷新页面。
-
-所有包装节点都只存在于当前浏览器 DOM 中，刷新后就会恢复服务端输出的原始结构。
-
-## 详细说明
+## 实现原理与细节
 
 ### 改造目标
 
@@ -374,17 +383,17 @@ CSS 只在菜单没有 `.js-menu-show` 时显示这两个链接。点击 Miniflu
 
 有结果时继续使用文章卡片、封面、分页、收藏和左滑操作。判断状态使用 URL 中的非空 `q`、实际结果卡片和 Miniflux 原生无结果提示，不依赖标题中的 `(0)`。
 
-### 为什么坚持渐进增强
+### 如何保留原生业务逻辑
 
-这次改造没有接管 Miniflux 的业务逻辑，而是尽量让 Miniflux 继续负责它擅长的事情：
+主题没有接管 Miniflux 的业务逻辑，而是让 Miniflux 继续负责状态保存和页面功能：
 
 - 表单提交由原生表单完成；
 - 已读状态由原生状态接口保存；
 - 收藏、原文和键盘快捷键保持不变；
 - 分页继续使用服务端生成的真实链接；
-- Custom JavaScript 只负责增加样式类、布局节点和交互外壳。
+- Custom JavaScript 只负责增加样式类、布局节点和交互层。
 
-这样做的好处是升级和回滚都比较简单。遇到问题时，清空 Custom JavaScript、恢复旧 Custom CSS 并刷新页面，就能回到 Miniflux 原始界面，不需要修改数据库或重启服务。
+Miniflux 以后升级导致样式不兼容时，换回备份并刷新就行，不需要碰数据库或重启服务。
 
 ### 性能与兼容性
 
@@ -401,23 +410,6 @@ CSS 只在菜单没有 `.js-menu-show` 时显示这两个链接。点击 Miniflu
 
 由于选择器基于 Miniflux 2.3.5 的实际模板，升级 Miniflux 后需要重新检查文章卡片、状态按钮、分页和搜索表单的 DOM，不能默认所有版本都完全一致。
 
-### 实际验证
-
-我使用真实登录页面和移动端浏览器尺寸检查了以下内容：
-
-- 卡片、封面和摘要能够正常生成；
-- 无图片文章可以回退到默认风景图；
-- 已读操作提交后刷新页面仍然有效；
-- 搜索和设置在菜单收起时可见，完整菜单仍可展开；
-- 搜索表单能够正常进入 `/search?q=关键词`；
-- 搜索结果继续拥有原生状态按钮和左滑包装；
-- 单页、多页、未读为空和搜索无结果状态能够正确区分；
-- 页面没有出现横向溢出。
-
-主题优化不能只看截图。特别是已读、收藏、分页和搜索这些功能，必须确认服务器状态和真实链接没有被视觉改造破坏。
-
 ## 总结
 
-Miniflux 的默认界面虽然朴素，但它提供了稳定、清晰而且容易渐进增强的基础。只要先检查真实 DOM，尊重原生表单、状态控件和分页链接，就可以通过一套用户级 CSS 和 JavaScript，把它改造成更符合个人阅读习惯的移动端 RSS 应用。
-
-对我来说，这次改造最有价值的并不是某一段 CSS，而是确认了一条可维护的路线：视觉层可以大胆优化，业务状态尽量交还给 Miniflux，所有增强都应该能随时关闭和回滚。
+改完以后，Miniflux 还是原来的 Miniflux：搜索、收藏、分页和已读状态都没变，只是手机上终于更像一个顺手的阅读器了。CSS 负责好看，JavaScript 补上交互，真正的数据操作继续交给原生功能，日常用起来省心不少。

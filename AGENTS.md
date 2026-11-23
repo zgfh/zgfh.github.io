@@ -125,3 +125,20 @@ content/docs/web/
 - `content/docs/cncf/` 下 `landscape/`、`changelog/`、`releasenote/` 为自动生成内容，不要手动编辑；`project/{name}/` 下可写手写博客
 - 主题通过 Hugo Module 管理，不要直接修改 `themes/` 目录
 - 多个 Hugo 版本共存，注意兼容性（Dockerfile v0.150.1，Actions v0.147.7）
+
+---
+
+## 博客写作与发布工作流
+
+用户要求撰写博客时，默认遵循以下流程：
+
+1. 所有博客正文、截图和附件都写入本仓库 `/root/code/zgfh.github.io`，不要只在聊天中交付，也不要写到其他项目仓库。
+2. 写作前读取本文件和目标 section 的既有格式；每层目录必须有 `_index.md`。
+3. 写完后先启动 Hugo 本地预览，实际请求文章页面和图片，向用户提供预览地址。
+4. 在用户明确确认预览效果前，不得 push。用户仅说“提交”时可以创建本地 commit，但不能据此推断允许 push。
+5. 用户确认后再 push 到远程仓库。
+6. push 后使用 `scripts/monitor_pages_publish.sh` 监控 `pages.yaml` 对应提交的 GitHub Actions 状态；优先让脚本轮询并仅在状态变化时输出，避免在对话中频繁调用工具消耗 token。
+7. Actions 成功后继续检查目标线上 URL 返回 HTTP 200，最后把正式线上地址交付给用户。
+8. 如果构建、部署或线上检查失败，报告失败步骤和工作流 URL，不得声称发布完成。
+
+默认线上域名为 `https://www.daozzg.com/`。文章正式 URL 应根据 Hugo section、slug 和实际构建结果确定，不要只靠文件路径猜测。
