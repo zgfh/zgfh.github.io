@@ -4,16 +4,67 @@ set -euo pipefail
 COMMIT_SHA=${1:-$(git rev-parse HEAD)}
 ONLINE_URL=${2:-}
 WORKFLOW_FILE=${WORKFLOW_FILE:-pages.yaml}
-POLL_SECONDS=${POLL_SECONDS:-15}
+POLL_SECONDS=${POLL_SECONDS:-20}
 TIMEOUT_SECONDS=${TIMEOUT_SECONDS:-1200}
 
-command -v gh >/dev/null || {
-  echo "error: gh is required" >&2
-  exit 1
-}
 command -v jq >/dev/null || {
   echo "error: jq is required" >&2
   exit 1
+}
+command -v curl >/dev/null || {
+  echo "error: curl is required" >&2
+  exit 1
+}
+
+use_gh=false
+if command -v gh >/dev/null && gh auth status >/dev/null 2>&1; then
+  use_gh=true
+fi
+
+remote_url=$(git remote get-url origin)
+case "$remote_url" in
+  git@github.com:*) github_repo=${remote_url#git@github.com:} ;;
+  https://github.com/*) github_repo=${remote_url#https://github.com/} ;;
+  *)
+    echo "error: cannot derive GitHub repository from origin: $remote_url" >&2
+    exit 1
+    ;;
+esac
+github_repo=${github_repo%.git}
+
+api_headers=(-H "Accept: application/vnd.github+json")
+if [[ -n "${GITHUB_TOKEN:-}" ]]; then
+  api_headers+=(-H "Authorization: Bearer $GITHUB_TOKEN")
+fi
+
+list_run() {
+  if [[ "$use_gh" == true ]]; then
+    gh run list \
+      --workflow "$WORKFLOW_FILE" \
+      --commit "$COMMIT_SHA" \
+      --limit 1 \
+      --json databaseId,status,conclusion,url,headSha
+  else
+    curl -fsS "${api_headers[@]}" \
+      "https://api.github.com/repos/$github_repo/actions/workflows/$WORKFLOW_FILE/runs?head_sha=$COMMIT_SHA&per_page=1" \
+      | jq '[.workflow_runs[0] | select(.) | {
+          databaseId: .id,
+          status,
+          conclusion,
+          url: .html_url,
+          headSha: .head_sha
+        }]'
+  fi
+}
+
+view_run() {
+  if [[ "$use_gh" == true ]]; then
+    gh run view "$run_id" --json status,conclusion,url,headSha
+  else
+    curl -fsS "${api_headers[@]}" \
+      "https://api.github.com/repos/$github_repo/actions/runs/$run_id" \
+      | jq '{status, conclusion, url: .html_url, headSha: .head_sha}'
+  fi
 }
 
 deadline=$((SECONDS + TIMEOUT_SECONDS))
@@ -24,11 +75,7 @@ conclusion=""
 run_url=""
 
 while (( SECONDS < deadline )); do
-  run_json=$(gh run list \
-    --workflow "$WORKFLOW_FILE" \
-    --commit "$COMMIT_SHA" \
-    --limit 1 \
-    --json databaseId,status,conclusion,url,headSha)
+  run_json=$(list_run)
 
   run_id=$(jq -r '.[0].databaseId // empty' <<<"$run_json")
   if [[ -n "$run_id" ]]; then
@@ -48,7 +95,7 @@ if [[ -z "$run_id" ]]; then
 fi
 
 while (( SECONDS < deadline )); do
-  run_json=$(gh run view "$run_id" --json status,conclusion,url,headSha)
+  run_json=$(view_run)
   status=$(jq -r '.status' <<<"$run_json")
   conclusion=$(jq -r '.conclusion // ""' <<<"$run_json")
   run_url=$(jq -r '.url' <<<"$run_json")
