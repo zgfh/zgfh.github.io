@@ -63,7 +63,11 @@ def validate_records(payload: Any, label: str) -> list[dict[str, Any]]:
 
 
 def record_key(record: dict[str, Any]) -> str:
-    return f"{record['org']}\x1f{record['name']}"
+    # The upstream file has no immutable record ID. A model can legitimately
+    # have several release events, so org + name alone is not unique. Date and
+    # kind distinguish those events while note, links and source remain fields
+    # that can be reported as revisions.
+    return "\x1f".join(record[field] for field in ("org", "name", "date", "kind"))
 
 
 def canonical(records: list[dict[str, Any]]) -> str:
