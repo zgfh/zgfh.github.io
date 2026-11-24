@@ -1216,6 +1216,16 @@
     "url2": "https://ernie.baidu.com/release/ernie-5-5-flash-base"
   },
   {
+    "date": "2026-11-23",
+    "kind": "开放权重",
+    "name": "ERNIE 5.5 Flash Preview（开放权重）",
+    "note": "百度在 Hugging Face 开放 ERNIE 5.5 Flash Preview 权重：该版本是 ERNIE 5.5 Flash Base（280B 总参数、每词元激活 14B 的 MoE）的首个官方后训练版，支持 100 万词元上下文，仓库以 FP8 量化权重加 flashindexer 发布，Apache 2.0 许可；预览 API 已于 11 月 11 日在百度智能云千帆开放。",
+    "org": "Baidu",
+    "source": "官方模型仓库与文心发布公告",
+    "url": "https://huggingface.co/baidu/ERNIE-5.5-Flash-Preview",
+    "url2": "https://ernie.baidu.com/zh/release/ernie-5-5-flash-preview/"
+  },
+  {
     "date": "2025-11-11",
     "kind": "开放权重",
     "name": "ERNIE-4.5-VL-28B-A3B-Thinking",
@@ -3533,6 +3543,15 @@
     "org": "Mistral",
     "source": "官方原文",
     "url": "https://mistral.ai/news/announcing-mistral-7b/"
+  },
+  {
+    "date": "2023-12-11",
+    "kind": "开放权重",
+    "name": "Mistral 7B Instruct v0.2",
+    "note": "Mistral 发布 7B 指令模型的 v0.2 更新：取消 v0.1 对 system 提示的限制，并将上下文窗口从 8K 扩展至 32K，与 Mixtral 8x7B 同日开放，Apache 2.0 许可。",
+    "org": "Mistral",
+    "source": "官方模型仓库",
+    "url": "https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.2"
   },
   {
     "date": "2024-02-26",
